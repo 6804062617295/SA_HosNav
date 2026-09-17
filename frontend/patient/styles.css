@@ -578,6 +578,17 @@ h2 {
     align-items: center;
 }
 
+.profile-row > div {
+    min-width: 0;
+}
+
+.profile-row h2,
+.profile-row p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .big-avatar {
     width: 58px;
     height: 58px;
@@ -588,6 +599,7 @@ h2 {
     place-items: center;
     font-size: 22px;
     font-weight: 700;
+    flex-shrink: 0;
 }
 
 .list-item {

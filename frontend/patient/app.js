@@ -10,6 +10,7 @@ const $ = (s) => document.querySelector(s);
 const go = (p) => {
     window.location.href = {
         login: "index.html",
+        register: "register.html",
         home: "home.html",
         search: "search.html",
         queue: "queue.html",
@@ -254,13 +255,17 @@ function notifications() {
     </section>`;
 }
 function profile() {
+    let userStr = localStorage.getItem('hosnav_user');
+    let user = userStr ? JSON.parse(userStr) : { name: 'Guest User', email: 'guest@hospital' };
+    let initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
     return html`<section class="screen">
         ${topbar("My profile")}
         <div class="card profile-row">
-            <div class="big-avatar">FS</div>
+            <div class="big-avatar">${initials}</div>
             <div>
-                <h2>Felix Smith</h2>
-                <p class="muted">HN: 992-001-24</p>
+                <h2>${user.name}</h2>
+                <p class="muted">${user.email}</p>
             </div>
         </div>
         <div class="card">
@@ -268,7 +273,7 @@ function profile() {
             <div class="list-item">Language · English</div>
             <div class="list-item">Accessibility settings</div>
         </div>
-        <button class="btn ghost" onclick="go('login')">Log out</button
+        <button class="btn ghost" onclick="localStorage.removeItem('hosnav_user'); localStorage.removeItem('hosnav_token'); go('login');">Log out</button
         >${nav("profile")}
     </section>`;
 }
