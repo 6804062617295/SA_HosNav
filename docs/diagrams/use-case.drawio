@@ -1,0 +1,112 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="use_case_diag" name="Use Case Diagram">
+    <mxGraphModel dx="1422" dy="827" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- System Boundary -->
+        <mxCell id="boundary" value="Hospital OPD System" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;verticalAlign=top;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="200" y="30" width="750" height="700" as="geometry" />
+        </mxCell>
+        <!-- Actors -->
+        <mxCell id="actor_patient" value="Patient" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="200" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_staff" value="Staff" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="100" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_admin" value="Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="400" width="30" height="60" as="geometry" />
+        </mxCell>
+        <!-- Use Cases -->
+        <mxCell id="uc_login" value="UC-1: Login" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="500" y="60" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_register" value="UC-10: Patient Register" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="250" y="60" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_generate_qr" value="UC-2: Generate Queue QR" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="750" y="150" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_manage_queues" value="UC-5: Manage Queues" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="750" y="250" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_manage_nav" value="UC-8: Manage Navigation Data" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="750" y="380" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_scan_qr" value="UC-3: Scan Queue QR" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="250" y="150" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_status" value="UC-4: View Queue Status" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="250" y="260" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_receive_notif" value="UC-9: Receive Queue Notification" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="450" y="260" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_scan_checkpoint" value="UC-7: Scan QR Checkpoint" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="450" y="420" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_map" value="UC-6: View Map and Navigate" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="250" y="420" width="140" height="70" as="geometry" />
+        </mxCell>
+        <!-- Include Relationships -->
+        <mxCell id="inc_1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;endFill=0;" edge="1" parent="1" source="uc_generate_qr" target="uc_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;endFill=0;" edge="1" parent="1" source="uc_manage_queues" target="uc_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;endFill=0;" edge="1" parent="1" source="uc_manage_nav" target="uc_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_4" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;endFill=0;" edge="1" parent="1" source="uc_view_map" target="uc_scan_checkpoint">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Extend Relationships -->
+        <mxCell id="ext_1" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;endFill=0;" edge="1" parent="1" source="uc_receive_notif" target="uc_view_status">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Associations to Actors -->
+        <!-- Patient -->
+        <mxCell id="assoc_pat_login" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_patient" target="uc_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_pat_register" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_patient" target="uc_register">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_pat_scan_qr" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_patient" target="uc_scan_qr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_pat_view_status" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_patient" target="uc_view_status">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_pat_view_map" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_patient" target="uc_view_map">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_pat_scan_cp" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_patient" target="uc_scan_checkpoint">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Staff -->
+        <mxCell id="assoc_staff_login" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_staff" target="uc_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_staff_gen_qr" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_staff" target="uc_generate_qr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_staff_manage_q" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_staff" target="uc_manage_queues">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Admin -->
+        <mxCell id="assoc_admin_login" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_admin" target="uc_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_admin_gen_qr" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_admin" target="uc_generate_qr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_admin_manage_nav" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_admin" target="uc_manage_nav">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

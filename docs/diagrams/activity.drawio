@@ -1,0 +1,188 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="activity_diag" name="Activity Diagram">
+    <mxGraphModel dx="1422" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Swimlanes -->
+        <mxCell id="lane_patient" value="Patient" style="swimlane;startSize=20;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="350" height="1100" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_system" value="System" style="swimlane;startSize=20;html=1;" vertex="1" parent="1">
+          <mxGeometry x="390" y="40" width="350" height="1100" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_staff" value="Staff" style="swimlane;startSize=20;html=1;" vertex="1" parent="1">
+          <mxGeometry x="740" y="40" width="350" height="1100" as="geometry" />
+        </mxCell>
+        <!-- PHASE 1: Queue Creation -->
+        <mxCell id="start_node" style="ellipse;fillColor=#333333;strokeColor=#333333;" vertex="1" parent="lane_staff">
+          <mxGeometry x="160" y="40" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act_staff_create" value="Create Queue (Standard Entry)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_staff">
+          <mxGeometry x="105" y="100" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_gen_qr" value="Generate Queue &amp; QR Code" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="105" y="100" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_disp_qr" value="Display QR to Staff" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="105" y="190" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- PHASE 2: Patient Enters Queue -->
+        <mxCell id="act_pat_scan_qr" value="Scan Queue QR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_patient">
+          <mxGeometry x="105" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_link_pat" value="Link Patient to Queue" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="105" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_disp_status" value="Display Queue Status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="105" y="370" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_pat_view_status" value="View Queue Status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_patient">
+          <mxGeometry x="105" y="370" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- PHASE 4: Navigation -->
+        <mxCell id="dec_need_nav" value="Need Navigation?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane_patient">
+          <mxGeometry x="115" y="470" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="act_pat_scan_cp" value="Scan QR Checkpoint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_patient">
+          <mxGeometry x="20" y="580" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_calc_route" value="Calculate Route" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="20" y="580" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_disp_inst" value="Display Step-by-Step Instructions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="20" y="670" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_pat_follow_inst" value="Follow Instructions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_patient">
+          <mxGeometry x="20" y="670" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- PHASE 3: Queue Management -->
+        <mxCell id="act_staff_call_q" value="Call Next Queue" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_staff">
+          <mxGeometry x="105" y="760" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_update_called" value="Update Queue Status to Called" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="105" y="760" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_notify_pat" value="Notify Patient" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="105" y="850" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_pat_arrives" value="Patient Arrives?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane_patient">
+          <mxGeometry x="115" y="840" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_update_skip" value="Update Status to Skipped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="20" y="940" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="end_node_skip" style="ellipse;fillColor=#333333;strokeColor=#333333;shape=doubleCircle;" vertex="1" parent="lane_system">
+          <mxGeometry x="75" y="1030" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_update_proc" value="Update Status to Processing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="190" y="940" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_staff_provide_svc" value="Provide Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_staff">
+          <mxGeometry x="105" y="940" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sys_update_comp" value="Update Status to Completed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_system">
+          <mxGeometry x="190" y="1020" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_fwd_next" value="Forward to Next?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane_staff">
+          <mxGeometry x="115" y="1010" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="end_node" style="ellipse;fillColor=#333333;strokeColor=#333333;shape=doubleCircle;" vertex="1" parent="lane_staff">
+          <mxGeometry x="290" y="1035" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Edges -->
+        <mxCell id="edge_start_create" edge="1" parent="1" source="start_node" target="act_staff_create" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_create_genqr" edge="1" parent="1" source="act_staff_create" target="act_sys_gen_qr" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_genqr_dispqr" edge="1" parent="1" source="act_sys_gen_qr" target="act_sys_disp_qr" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_dispqr_scanqr" edge="1" parent="1" source="act_sys_disp_qr" target="act_pat_scan_qr" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_scanqr_linkpat" edge="1" parent="1" source="act_pat_scan_qr" target="act_sys_link_pat" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_linkpat_dispstatus" edge="1" parent="1" source="act_sys_link_pat" target="act_sys_disp_status" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_dispstatus_viewstatus" edge="1" parent="1" source="act_sys_disp_status" target="act_pat_view_status" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_viewstatus_neednav" edge="1" parent="1" source="act_pat_view_status" target="dec_need_nav" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_neednav_yes" value="Yes" edge="1" parent="1" source="dec_need_nav" target="act_pat_scan_cp" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_scancp_calcroute" edge="1" parent="1" source="act_pat_scan_cp" target="act_sys_calc_route" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_calcroute_dispinst" edge="1" parent="1" source="act_sys_calc_route" target="act_sys_disp_inst" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_dispinst_followinst" edge="1" parent="1" source="act_sys_disp_inst" target="act_pat_follow_inst" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- No branch connects back to wait/wait node isn't explicitly there but we connect to view status -->
+        <mxCell id="edge_neednav_no" value="No" edge="1" parent="1" source="dec_need_nav" target="act_pat_view_status" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="280" y="510" />
+              <mxPoint x="280" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_followinst_merge" edge="1" parent="1" source="act_pat_follow_inst" target="act_pat_view_status" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="30" y="740" />
+              <mxPoint x="30" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_callq_updatecalled" edge="1" parent="1" source="act_staff_call_q" target="act_sys_update_called" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_updatecalled_notifypat" edge="1" parent="1" source="act_sys_update_called" target="act_sys_notify_pat" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_notifypat_patarrives" edge="1" parent="1" source="act_sys_notify_pat" target="dec_pat_arrives" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_patarrives_no" value="No" edge="1" parent="1" source="dec_pat_arrives" target="act_sys_update_skip" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_updateskip_endskip" edge="1" parent="1" source="act_sys_update_skip" target="end_node_skip" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_patarrives_yes" value="Yes" edge="1" parent="1" source="dec_pat_arrives" target="act_sys_update_proc" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_updateproc_provsvc" edge="1" parent="1" source="act_sys_update_proc" target="act_staff_provide_svc" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_provsvc_updatecomp" edge="1" parent="1" source="act_staff_provide_svc" target="act_sys_update_comp" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_updatecomp_fwdnext" edge="1" parent="1" source="act_sys_update_comp" target="dec_fwd_next" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_fwdnext_no" value="No" edge="1" parent="1" source="dec_fwd_next" target="end_node" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_fwdnext_yes" value="Yes" edge="1" parent="1" source="dec_fwd_next" target="act_staff_call_q" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980" y="1090" />
+              <mxPoint x="980" y="790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,112 @@
+<mxfile>
+  <diagram id="er_diagram" name="ER Diagram">
+    <mxGraphModel dx="1422" dy="827" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Entities -->
+        <mxCell id="ent_user" value="&lt;b&gt;User&lt;/b&gt;&lt;hr&gt;&lt;u&gt;user_id&lt;/u&gt;&lt;br&gt;email&lt;br&gt;password_hash&lt;br&gt;name&lt;br&gt;role" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ent_queue" value="&lt;b&gt;Queue&lt;/b&gt;&lt;hr&gt;&lt;u&gt;queue_id&lt;/u&gt;&lt;br&gt;patient_id (FK)&lt;br&gt;destination_id (FK)&lt;br&gt;status&lt;br&gt;created_at" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="480" y="100" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ent_queue_history" value="&lt;b&gt;QueueHistory&lt;/b&gt;&lt;hr&gt;&lt;u&gt;history_id&lt;/u&gt;&lt;br&gt;queue_id (FK)&lt;br&gt;status&lt;br&gt;updated_at&lt;br&gt;staff_id (FK)" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="850" y="100" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ent_location" value="&lt;b&gt;Location&lt;/b&gt;&lt;hr&gt;&lt;u&gt;location_id&lt;/u&gt;&lt;br&gt;name&lt;br&gt;building&lt;br&gt;floor" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="480" y="380" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ent_navigation_node" value="&lt;b&gt;NavigationNode&lt;/b&gt;&lt;hr&gt;&lt;u&gt;node_id&lt;/u&gt;&lt;br&gt;location_id (FK)&lt;br&gt;type" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="480" y="650" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ent_navigation_edge" value="&lt;b&gt;NavigationEdge&lt;/b&gt;&lt;hr&gt;&lt;u&gt;edge_id&lt;/u&gt;&lt;br&gt;from_node (FK)&lt;br&gt;to_node (FK)&lt;br&gt;instruction" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="100" y="650" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ent_qr_checkpoint" value="&lt;b&gt;QRCheckpoint&lt;/b&gt;&lt;hr&gt;&lt;u&gt;qr_id&lt;/u&gt;&lt;br&gt;node_id (FK)" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="850" y="650" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <!-- Relationships with crow's foot notation -->
+        <mxCell id="er_user_queue" style="edgeStyle=orthogonalEdgeStyle;startArrow=ERmandOne;endArrow=ERmany;" edge="1" parent="1" source="ent_user" target="ent_queue">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_er_uq" value="has" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="er_user_queue">
+          <mxGeometry x="0" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="er_loc_queue" style="edgeStyle=orthogonalEdgeStyle;startArrow=ERmandOne;endArrow=ERmany;" edge="1" parent="1" source="ent_location" target="ent_queue">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_er_lq" value="destination of" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="er_loc_queue">
+          <mxGeometry x="0" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="er_queue_hist" style="edgeStyle=orthogonalEdgeStyle;startArrow=ERmandOne;endArrow=ERmany;" edge="1" parent="1" source="ent_queue" target="ent_queue_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_er_qh" value="has history" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="er_queue_hist">
+          <mxGeometry x="0" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="er_user_hist" style="edgeStyle=orthogonalEdgeStyle;startArrow=ERmandOne;endArrow=ERmany;" edge="1" parent="1" source="ent_user" target="ent_queue_history">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210" y="60" />
+              <mxPoint x="960" y="60" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl_er_uh" value="updated by" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="er_user_hist">
+          <mxGeometry x="0" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="er_loc_node" style="edgeStyle=orthogonalEdgeStyle;startArrow=ERmandOne;endArrow=ERmany;" edge="1" parent="1" source="ent_location" target="ent_navigation_node">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_er_ln" value="has node" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="er_loc_node">
+          <mxGeometry x="0" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="er_node_edge_from" style="edgeStyle=orthogonalEdgeStyle;startArrow=ERmandOne;endArrow=ERmany;" edge="1" parent="1" source="ent_navigation_node" target="ent_navigation_edge">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="700" />
+              <mxPoint x="320" y="700" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl_er_ne_from" value="from" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="er_node_edge_from">
+          <mxGeometry x="0" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="er_node_edge_to" style="edgeStyle=orthogonalEdgeStyle;startArrow=ERmandOne;endArrow=ERmany;" edge="1" parent="1" source="ent_navigation_node" target="ent_navigation_edge">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="750" />
+              <mxPoint x="320" y="750" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl_er_ne_to" value="to" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="er_node_edge_to">
+          <mxGeometry x="0" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="er_node_qr" style="edgeStyle=orthogonalEdgeStyle;startArrow=ERmandOne;endArrow=ERzeroToOne;" edge="1" parent="1" source="ent_navigation_node" target="ent_qr_checkpoint">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_er_nq" value="has checkpoint" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="er_node_qr">
+          <mxGeometry x="0" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,484 @@
+meta:
+  project: Hospital Queue Management and Indoor Navigation System
+  updated: 2026-09-17T13:27:04Z
+  sources:
+    - docs/SRS.md
+    - AGENTS.md
+
+actors:
+  - name: Patient
+    type: human
+    description: Uses PWA to manage queue and navigate.
+    source: docs/SRS.md section 2.2
+  - name: Staff
+    type: human
+    description: Uses Staff Website to manage queues.
+    source: docs/SRS.md section 2.2
+  - name: Admin
+    type: human
+    description: Manages system data and maps.
+    source: docs/SRS.md section 2.2
+
+use_cases:
+  - id: UC-1
+    name: Login
+    actor: Patient
+    description: Authenticate using Email and Password.
+    source: docs/SRS.md section 3.1 FR-01
+  - id: UC-2
+    name: Login (Staff/Admin)
+    actor: Staff
+    description: Authenticate using Email and Password.
+    source: docs/SRS.md section 3.1 FR-01
+  - id: UC-3
+    name: Generate Queue QR
+    actor: Staff
+    description: Generate Queue QR for patient.
+    source: docs/SRS.md section 3.1 FR-02
+  - id: UC-4
+    name: Scan Queue QR
+    actor: Patient
+    description: Scan QR to enter Queue Flow.
+    source: docs/SRS.md section 3.1 FR-02
+  - id: UC-5
+    name: View Queue Status
+    actor: Patient
+    description: Track queue status via polling.
+    source: docs/SRS.md section 3.1 FR-03
+  - id: UC-6
+    name: Manage Queues
+    actor: Staff
+    description: View, call, change status, forward queues.
+    source: docs/SRS.md section 3.1 FR-05
+  - id: UC-7
+    name: View Map and Navigate
+    actor: Patient
+    description: View indoor map and step-by-step navigation.
+    source: docs/SRS.md section 3.1 FR-07
+  - id: UC-8
+    name: Manage Navigation Data
+    actor: Admin
+    description: CRUD for Locations, Nodes, Edges, QR Checkpoints.
+    source: docs/SRS.md section 3.1 FR-11
+
+processes:
+  - id: P-0
+    name: Hospital OPD System
+    level: 0
+    parent: null
+    maps_to_use_case: null
+    source: docs/SRS.md section 2.1
+  - id: P-1
+    name: Authentication & Access Control
+    level: 1
+    parent: P-0
+    maps_to_use_case: UC-1
+    source: docs/SRS.md section 3.1 FR-01
+  - id: P-2
+    name: Queue Management
+    level: 1
+    parent: P-0
+    maps_to_use_case: UC-6
+    source: docs/SRS.md section 3.1 FR-05
+  - id: P-3
+    name: Navigation Engine
+    level: 1
+    parent: P-0
+    maps_to_use_case: UC-7
+    source: docs/SRS.md section 3.1 FR-07
+  - id: P-4
+    name: Map Management
+    level: 1
+    parent: P-0
+    maps_to_use_case: UC-8
+    source: docs/SRS.md section 3.1 FR-11
+
+data_stores:
+  - id: DS-1
+    name: User Data
+    maps_to_entity: User
+    source: docs/SRS.md section 3.4
+  - id: DS-2
+    name: Queue Data
+    maps_to_entity: Queue
+    source: docs/SRS.md section 3.4
+  - id: DS-3
+    name: Map Data
+    maps_to_entity: Location
+    source: docs/SRS.md section 3.4
+
+data_flows:
+  - from: Patient
+    to: P-0
+    label: Scan QR / View Queue / Map Request
+    level: 0
+    source: docs/SRS.md section 3.1
+  - from: P-0
+    to: Patient
+    label: Queue Status / Navigation Instructions
+    level: 0
+    source: docs/SRS.md section 3.1
+  - from: Staff
+    to: P-0
+    label: Queue Management Commands
+    level: 0
+    source: docs/SRS.md section 3.1
+  - from: P-0
+    to: Staff
+    label: Queue Lists
+    level: 0
+    source: docs/SRS.md section 3.1
+  - from: Admin
+    to: P-0
+    label: Map Data Updates
+    level: 0
+    source: docs/SRS.md section 3.1
+  - from: Patient
+    to: P-1
+    label: Credentials
+    level: 1
+    source: docs/SRS.md section 3.1 FR-01
+  - from: P-1
+    to: DS-1
+    label: Auth Check
+    level: 1
+    source: docs/SRS.md section 3.1 FR-01
+  - from: Patient
+    to: P-2
+    label: Queue Tracking Request
+    level: 1
+    source: docs/SRS.md section 3.1 FR-03
+  - from: P-2
+    to: Patient
+    label: Queue Status
+    level: 1
+    source: docs/SRS.md section 3.1 FR-03
+  - from: Staff
+    to: P-2
+    label: Update Queue
+    level: 1
+    source: docs/SRS.md section 3.1 FR-05
+  - from: P-2
+    to: DS-2
+    label: Read/Write Queue Data
+    level: 1
+    source: docs/SRS.md section 3.1 FR-05
+  - from: Patient
+    to: P-3
+    label: Navigation Request
+    level: 1
+    source: docs/SRS.md section 3.1 FR-07
+  - from: P-3
+    to: Patient
+    label: Step-by-step Instructions
+    level: 1
+    source: docs/SRS.md section 3.1 FR-09
+  - from: P-3
+    to: DS-3
+    label: Read Map Data
+    level: 1
+    source: docs/SRS.md section 3.1 FR-07
+  - from: Admin
+    to: P-4
+    label: CRUD Map Data
+    level: 1
+    source: docs/SRS.md section 3.1 FR-11
+  - from: P-4
+    to: DS-3
+    label: Write Map Data
+    level: 1
+    source: docs/SRS.md section 3.1 FR-11
+
+entities:
+  - name: User
+    attributes:
+      - name: user_id
+        type: int
+        pk: true
+        fk: null
+      - name: email
+        type: string
+        pk: false
+        fk: null
+      - name: password_hash
+        type: string
+        pk: false
+        fk: null
+      - name: name
+        type: string
+        pk: false
+        fk: null
+      - name: role
+        type: string
+        pk: false
+        fk: null
+    source: docs/SRS.md section 3.4
+  - name: Queue
+    attributes:
+      - name: queue_id
+        type: int
+        pk: true
+        fk: null
+      - name: patient_id
+        type: int
+        pk: false
+        fk: User
+      - name: destination_id
+        type: int
+        pk: false
+        fk: Location
+      - name: status
+        type: string
+        pk: false
+        fk: null
+      - name: created_at
+        type: timestamp
+        pk: false
+        fk: null
+    source: docs/SRS.md section 3.4
+  - name: QueueHistory
+    attributes:
+      - name: history_id
+        type: int
+        pk: true
+        fk: null
+      - name: queue_id
+        type: int
+        pk: false
+        fk: Queue
+      - name: status
+        type: string
+        pk: false
+        fk: null
+      - name: updated_at
+        type: timestamp
+        pk: false
+        fk: null
+      - name: staff_id
+        type: int
+        pk: false
+        fk: User
+    source: docs/SRS.md section 3.4
+  - name: Location
+    attributes:
+      - name: location_id
+        type: int
+        pk: true
+        fk: null
+      - name: name
+        type: string
+        pk: false
+        fk: null
+      - name: building
+        type: string
+        pk: false
+        fk: null
+      - name: floor
+        type: int
+        pk: false
+        fk: null
+    source: docs/SRS.md section 3.4
+  - name: NavigationNode
+    attributes:
+      - name: node_id
+        type: int
+        pk: true
+        fk: null
+      - name: location_id
+        type: int
+        pk: false
+        fk: Location
+      - name: type
+        type: string
+        pk: false
+        fk: null
+    source: docs/SRS.md section 3.4
+  - name: NavigationEdge
+    attributes:
+      - name: edge_id
+        type: int
+        pk: true
+        fk: null
+      - name: from_node
+        type: int
+        pk: false
+        fk: NavigationNode
+      - name: to_node
+        type: int
+        pk: false
+        fk: NavigationNode
+      - name: instruction
+        type: string
+        pk: false
+        fk: null
+    source: docs/SRS.md section 3.4
+  - name: QRCheckpoint
+    attributes:
+      - name: qr_id
+        type: int
+        pk: true
+        fk: null
+      - name: node_id
+        type: int
+        pk: false
+        fk: NavigationNode
+    source: docs/SRS.md section 3.4
+
+relationships:
+  - from: User
+    to: Queue
+    type: one-to-many
+    label: has
+    source: docs/SRS.md section 3.4
+  - from: Location
+    to: Queue
+    type: one-to-many
+    label: destination of
+    source: docs/SRS.md section 3.4
+  - from: Queue
+    to: QueueHistory
+    type: one-to-many
+    label: has history
+    source: docs/SRS.md section 3.4
+  - from: User
+    to: QueueHistory
+    type: one-to-many
+    label: updated by
+    source: docs/SRS.md section 3.4
+  - from: Location
+    to: NavigationNode
+    type: one-to-many
+    label: has node
+    source: docs/SRS.md section 3.4
+  - from: NavigationNode
+    to: NavigationEdge
+    type: one-to-many
+    label: from
+    source: docs/SRS.md section 3.4
+  - from: NavigationNode
+    to: NavigationEdge
+    type: one-to-many
+    label: to
+    source: docs/SRS.md section 3.4
+  - from: NavigationNode
+    to: QRCheckpoint
+    type: one-to-one
+    label: associated with
+    source: docs/SRS.md section 3.4
+
+classes:
+  - name: User
+    type: entity
+    maps_to_entity: User
+    attributes:
+      - name: user_id
+        type: int
+        visibility: private
+      - name: email
+        type: string
+        visibility: private
+      - name: role
+        type: string
+        visibility: private
+    methods:
+      - name: login
+        parameters: "email, password"
+        return_type: boolean
+        visibility: public
+    source: docs/SRS.md section 3.4
+  - name: Queue
+    type: entity
+    maps_to_entity: Queue
+    attributes:
+      - name: queue_id
+        type: int
+        visibility: private
+      - name: status
+        type: string
+        visibility: private
+    methods:
+      - name: updateStatus
+        parameters: "status"
+        return_type: void
+        visibility: public
+    source: docs/SRS.md section 3.4
+  - name: QueueHistory
+    type: entity
+    maps_to_entity: QueueHistory
+    attributes:
+      - name: history_id
+        type: int
+        visibility: private
+    methods: []
+    source: docs/SRS.md section 3.4
+  - name: Location
+    type: entity
+    maps_to_entity: Location
+    attributes:
+      - name: location_id
+        type: int
+        visibility: private
+    methods: []
+    source: docs/SRS.md section 3.4
+  - name: NavigationNode
+    type: entity
+    maps_to_entity: NavigationNode
+    attributes:
+      - name: node_id
+        type: int
+        visibility: private
+    methods: []
+    source: docs/SRS.md section 3.4
+  - name: NavigationEdge
+    type: entity
+    maps_to_entity: NavigationEdge
+    attributes:
+      - name: edge_id
+        type: int
+        visibility: private
+    methods: []
+    source: docs/SRS.md section 3.4
+  - name: QRCheckpoint
+    type: entity
+    maps_to_entity: QRCheckpoint
+    attributes:
+      - name: qr_id
+        type: int
+        visibility: private
+    methods: []
+    source: docs/SRS.md section 3.4
+
+states:
+  - entity: Queue
+    states:
+      - name: Waiting
+      - name: Called
+      - name: Processing
+      - name: Completed
+      - name: Skipped
+    transitions:
+      - from: Waiting
+        to: Called
+        trigger: Staff calls queue
+        guard: null
+      - from: Called
+        to: Processing
+        trigger: Patient arrives
+        guard: null
+      - from: Called
+        to: Skipped
+        trigger: Patient no-show
+        guard: null
+      - from: Processing
+        to: Completed
+        trigger: Service done
+        guard: null
+    source: AGENTS.md section 6
+
+business_rules:
+  - id: BR-1
+    description: Queue system supports only Waiting, Called, Processing, Completed, Skipped.
+    source: AGENTS.md section 6
+  - id: BR-2
+    description: Backend authorization is mandatory, using Role-Based Access Control.
+    source: AGENTS.md section 9

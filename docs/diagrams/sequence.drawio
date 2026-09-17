@@ -1,0 +1,255 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="sequence_diag" name="Sequence Diagram">
+    <mxGraphModel dx="1422" dy="1800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Lifelines -->
+        <mxCell id="ll_patient" value=":Patient" style="shape=umlLifeline;participant=umlActor;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="40" width="40" height="1600" as="geometry" />
+        </mxCell>
+        <mxCell id="ll_patient_pwa" value=":Patient PWA" style="shape=umlLifeline;participant=umlEntity;html=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="40" width="80" height="1600" as="geometry" />
+        </mxCell>
+        <mxCell id="ll_staff" value=":Staff" style="shape=umlLifeline;participant=umlActor;html=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="40" width="40" height="1600" as="geometry" />
+        </mxCell>
+        <mxCell id="ll_staff_web" value=":Staff Website" style="shape=umlLifeline;participant=umlEntity;html=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="40" width="80" height="1600" as="geometry" />
+        </mxCell>
+        <mxCell id="ll_api" value=":Backend API" style="shape=umlLifeline;participant=umlEntity;html=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="40" width="80" height="1600" as="geometry" />
+        </mxCell>
+        <mxCell id="ll_db" value=":Database" style="shape=umlLifeline;participant=umlEntity;html=1;" vertex="1" parent="1">
+          <mxGeometry x="850" y="40" width="80" height="1600" as="geometry" />
+        </mxCell>
+        
+        <!-- Scenario 1 Note -->
+        <mxCell id="note_scen1" value="Scenario 1: Create Queue &amp; Generate QR" style="text;align=left;fontStyle=1;fontSize=12;fillColor=#ffffcc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="50" y="100" width="300" height="30" as="geometry" />
+        </mxCell>
+        <!-- Messages Scenario 1 -->
+        <mxCell id="m1_1" value="createQueue()" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_staff" target="ll_staff_web">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="160" />
+              <mxPoint x="590" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_2" value="POST /api/queues" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_staff_web" target="ll_api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="590" y="200" />
+              <mxPoint x="740" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_3" value="INSERT INTO Queue" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_api" target="ll_db">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="240" />
+              <mxPoint x="890" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_4" value="queue record" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_db" target="ll_api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="890" y="280" />
+              <mxPoint x="740" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_5" value="generateQRToken()" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_api" target="ll_api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="320" />
+              <mxPoint x="780" y="320" />
+              <mxPoint x="780" y="340" />
+              <mxPoint x="740" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_6" value="{queue_id, qr_code_url}" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_api" target="ll_staff_web">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="380" />
+              <mxPoint x="590" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1_7" value="Display QR Code" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_staff_web" target="ll_staff">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="590" y="420" />
+              <mxPoint x="420" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Scenario 2 Note -->
+        <mxCell id="note_scen2" value="Scenario 2: Patient Scans QR &amp; Tracks Queue" style="text;align=left;fontStyle=1;fontSize=12;fillColor=#ffffcc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="50" y="480" width="350" height="30" as="geometry" />
+        </mxCell>
+        <!-- Messages Scenario 2 -->
+        <mxCell id="m2_8" value="scanQR()" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_patient" target="ll_patient_pwa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="120" y="540" />
+              <mxPoint x="290" y="540" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_9" value="GET /api/queues/:token" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_patient_pwa" target="ll_api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="580" />
+              <mxPoint x="740" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_10" value="SELECT Queue WHERE token=..." style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_api" target="ll_db">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="620" />
+              <mxPoint x="890" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_11" value="queue data" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_db" target="ll_api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="890" y="660" />
+              <mxPoint x="740" y="660" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_12" value="{queue_id, status, position}" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_api" target="ll_patient_pwa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="700" />
+              <mxPoint x="290" y="700" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_13" value="Display Queue Status" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_patient_pwa" target="ll_patient">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="740" />
+              <mxPoint x="120" y="740" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note_loop" value="loop [polling every N seconds]" style="text;align=left;fontStyle=1;fontSize=12;fillColor=#ffffcc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="50" y="780" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="m2_15" value="GET /api/queues/:id/status" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_patient_pwa" target="ll_api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="840" />
+              <mxPoint x="740" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2_16" value="{status, position}" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_api" target="ll_patient_pwa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="880" />
+              <mxPoint x="290" y="880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Scenario 3 Note -->
+        <mxCell id="note_scen3" value="Scenario 3: Staff Calls Queue" style="text;align=left;fontStyle=1;fontSize=12;fillColor=#ffffcc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="50" y="940" width="250" height="30" as="geometry" />
+        </mxCell>
+        <!-- Messages Scenario 3 -->
+        <mxCell id="m3_17" value="callQueue(queue_id)" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_staff" target="ll_staff_web">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="1000" />
+              <mxPoint x="590" y="1000" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_18" value="PATCH /api/queues/:id {status: Called}" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_staff_web" target="ll_api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="590" y="1040" />
+              <mxPoint x="740" y="1040" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_19" value="UPDATE Queue SET status=Called" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_api" target="ll_db">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="1080" />
+              <mxPoint x="890" y="1080" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_20" value="INSERT INTO QueueHistory" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_api" target="ll_db">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="1120" />
+              <mxPoint x="890" y="1120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_21" value="success" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_db" target="ll_api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="890" y="1160" />
+              <mxPoint x="740" y="1160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_22" value="{updated queue}" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_api" target="ll_staff_web">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="1200" />
+              <mxPoint x="590" y="1200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_23" value="Queue Called" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_staff_web" target="ll_staff">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="590" y="1240" />
+              <mxPoint x="420" y="1240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note_pat_side" value="--- Patient side (via polling) ---" style="text;align=left;fontStyle=1;fontSize=12;fillColor=#ffffcc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1280" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="m3_25" value="GET /api/queues/:id/status" style="endArrow=classic;html=1;" edge="1" parent="1" source="ll_patient_pwa" target="ll_api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="1340" />
+              <mxPoint x="740" y="1340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_26" value="{status: Called}" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_api" target="ll_patient_pwa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="1380" />
+              <mxPoint x="290" y="1380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3_27" value="Notification: Your queue is called!" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="ll_patient_pwa" target="ll_patient">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="1420" />
+              <mxPoint x="120" y="1420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,51 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="diag_state" name="Queue State Diagram">
+    <mxGraphModel dx="1000" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Initial state -->
+        <mxCell id="state_init" value="" style="ellipse;fillColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="500" y="50" width="20" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- States -->
+        <mxCell id="state_waiting" value="Waiting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="450" y="150" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="state_called" value="Called" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="450" y="300" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="state_processing" value="Processing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="450" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="state_skipped" value="Skipped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="600" y="450" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="state_completed" value="Completed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="600" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Final states -->
+        <mxCell id="state_final_comp" value="" style="ellipse;fillColor=#333333;shape=doubleCircle;" vertex="1" parent="1">
+          <mxGeometry x="348" y="700" width="24" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="state_final_skip" value="" style="ellipse;fillColor=#333333;shape=doubleCircle;" vertex="1" parent="1">
+          <mxGeometry x="648" y="700" width="24" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- Transitions -->
+        <mxCell id="t_init_wait" value="" style="endArrow=classic;" edge="1" source="state_init" target="state_waiting" parent="1" />
+        <mxCell id="t_wait_call" value="Staff calls queue" style="endArrow=classic;" edge="1" source="state_waiting" target="state_called" parent="1" />
+        <mxCell id="t_call_proc" value="Patient arrives" style="endArrow=classic;" edge="1" source="state_called" target="state_processing" parent="1" />
+        <mxCell id="t_call_skip" value="Patient no-show" style="endArrow=classic;" edge="1" source="state_called" target="state_skipped" parent="1" />
+        <mxCell id="t_proc_comp" value="Service done" style="endArrow=classic;" edge="1" source="state_processing" target="state_completed" parent="1" />
+        
+        <mxCell id="t_comp_fin" value="" style="endArrow=classic;" edge="1" source="state_completed" target="state_final_comp" parent="1" />
+        <mxCell id="t_skip_fin" value="" style="endArrow=classic;" edge="1" source="state_skipped" target="state_final_skip" parent="1" />
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

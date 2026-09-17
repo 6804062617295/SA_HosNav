@@ -1,0 +1,23 @@
+# Environments
+.env
+.env.*
+env/
+enviroment/
+
+# OS Files
+.DS_Store
+*.DS_Store
+Thumbs.db
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Specific Ignores
+skills-lock.json
+diagram-system-skill.zip
+sam/
+.agents/
+AGENTS.md

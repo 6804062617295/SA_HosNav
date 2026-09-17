@@ -1,0 +1,115 @@
+<mxfile>
+  <diagram id="dfd_level_0" name="DFD Level 0">
+    <mxGraphModel dx="1422" dy="827" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- System -->
+        <mxCell id="sys_0" value="0.0&lt;br&gt;&lt;b&gt;Hospital Queue &amp;amp;&lt;br&gt;Navigation System&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;arcSize=20;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="480" y="320" width="200" height="200" as="geometry" />
+        </mxCell>
+        
+        <!-- External Entities -->
+        <mxCell id="ext_patient" value="Patient" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;rounded=0;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="360" width="120" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ext_staff" value="Staff" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;rounded=0;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="900" y="200" width="120" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ext_admin" value="Admin" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;rounded=0;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="900" y="560" width="120" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Flows -->
+        <!-- Patient Flows -->
+        <mxCell id="f_patient_in" edge="1" parent="1" source="ext_patient" target="sys_0">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l_patient_in" value="Scan QR / View Queue / Map Request" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="f_patient_in">
+          <mxGeometry x="0" y="0" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="f_patient_out" edge="1" parent="1" source="sys_0" target="ext_patient">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l_patient_out" value="Queue Status / Navigation Instructions / Notification" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=top;" connectable="0" vertex="1" parent="f_patient_out">
+          <mxGeometry x="0" y="0" relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Staff Flows -->
+        <mxCell id="f_staff_in_1" edge="1" parent="1" source="ext_staff" target="sys_0">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="240" />
+              <mxPoint x="750" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l_staff_in_1" value="Queue Mgmt Commands" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="f_staff_in_1">
+          <mxGeometry x="0" y="0" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="f_staff_in_2" edge="1" parent="1" source="ext_staff" target="sys_0">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="220" />
+              <mxPoint x="800" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l_staff_in_2" value="Generate Queue QR Request" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="f_staff_in_2">
+          <mxGeometry x="0" y="0" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="f_staff_out" edge="1" parent="1" source="sys_0" target="ext_staff">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="380" />
+              <mxPoint x="700" y="260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l_staff_out" value="Queue Lists / Queue QR" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=top;" connectable="0" vertex="1" parent="f_staff_out">
+          <mxGeometry x="0" y="0" relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Admin Flows -->
+        <mxCell id="f_admin_in" edge="1" parent="1" source="ext_admin" target="sys_0">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="600" />
+              <mxPoint x="750" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l_admin_in" value="CRUD Map Data" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="f_admin_in">
+          <mxGeometry x="0" y="0" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="f_admin_out" edge="1" parent="1" source="sys_0" target="ext_admin">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="460" />
+              <mxPoint x="700" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l_admin_out" value="Map Data / Confirmation" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=top;" connectable="0" vertex="1" parent="f_admin_out">
+          <mxGeometry x="0" y="0" relative="1" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

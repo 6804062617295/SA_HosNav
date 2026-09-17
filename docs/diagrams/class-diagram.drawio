@@ -1,0 +1,145 @@
+<mxfile>
+  <diagram id="class_diagram" name="Class Diagram">
+    <mxGraphModel dx="1422" dy="827" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Classes -->
+        <mxCell id="class_user" value="&lt;b&gt;User&lt;/b&gt;&lt;hr&gt;-user_id:int&lt;br&gt;-email:string&lt;br&gt;-password_hash:string&lt;br&gt;-name:string&lt;br&gt;-role:string&lt;hr&gt;+login(email,password):boolean&lt;br&gt;+register(data):boolean" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="class_queue" value="&lt;b&gt;Queue&lt;/b&gt;&lt;hr&gt;-queue_id:int&lt;br&gt;-patient_id:int&lt;br&gt;-destination_id:int&lt;br&gt;-status:string&lt;br&gt;-created_at:timestamp&lt;hr&gt;+updateStatus(status):void&lt;br&gt;+forwardTo(destination_id):void" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="480" y="100" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="class_queue_history" value="&lt;b&gt;QueueHistory&lt;/b&gt;&lt;hr&gt;-history_id:int&lt;br&gt;-queue_id:int&lt;br&gt;-status:string&lt;br&gt;-updated_at:timestamp&lt;br&gt;-staff_id:int&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="850" y="100" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="class_location" value="&lt;b&gt;Location&lt;/b&gt;&lt;hr&gt;-location_id:int&lt;br&gt;-name:string&lt;br&gt;-building:string&lt;br&gt;-floor:int&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="480" y="380" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="class_navigation_node" value="&lt;b&gt;NavigationNode&lt;/b&gt;&lt;hr&gt;-node_id:int&lt;br&gt;-location_id:int&lt;br&gt;-type:string&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="480" y="650" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="class_navigation_edge" value="&lt;b&gt;NavigationEdge&lt;/b&gt;&lt;hr&gt;-edge_id:int&lt;br&gt;-from_node:int&lt;br&gt;-to_node:int&lt;br&gt;-instruction:string&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="100" y="650" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="class_qr_checkpoint" value="&lt;b&gt;QRCheckpoint&lt;/b&gt;&lt;hr&gt;-qr_id:int&lt;br&gt;-node_id:int&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+          <mxGeometry x="850" y="650" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <!-- Relationships -->
+        <mxCell id="rel_user_queue" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" parent="1" source="class_user" target="class_queue">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_user_queue_1" value="1" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_user_queue">
+          <mxGeometry x="-0.8" y="15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_user_queue_2" value="*" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_user_queue">
+          <mxGeometry x="0.8" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="rel_loc_queue" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" parent="1" source="class_location" target="class_queue">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_loc_queue_1" value="1" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_loc_queue">
+          <mxGeometry x="-0.8" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_loc_queue_2" value="*" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_loc_queue">
+          <mxGeometry x="0.8" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="rel_queue_hist" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;startArrow=diamond;startFill=1;" edge="1" parent="1" source="class_queue" target="class_queue_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_queue_hist_1" value="1" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_queue_hist">
+          <mxGeometry x="-0.8" y="15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_queue_hist_2" value="*" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_queue_hist">
+          <mxGeometry x="0.8" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="rel_user_hist" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" parent="1" source="class_user" target="class_queue_history">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210" y="60" />
+              <mxPoint x="960" y="60" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl_user_hist_1" value="1" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_user_hist">
+          <mxGeometry x="-0.9" y="15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_user_hist_2" value="*" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_user_hist">
+          <mxGeometry x="0.9" y="15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_user_hist_lbl" value="updated by" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_user_hist">
+          <mxGeometry x="0" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="rel_loc_node" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" parent="1" source="class_location" target="class_navigation_node">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_loc_node_1" value="1" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_loc_node">
+          <mxGeometry x="-0.8" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_loc_node_2" value="*" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_loc_node">
+          <mxGeometry x="0.8" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="rel_node_edge_from" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" parent="1" source="class_navigation_node" target="class_navigation_edge">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="700" />
+              <mxPoint x="320" y="700" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl_node_edge_from_1" value="1" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_node_edge_from">
+          <mxGeometry x="-0.8" y="15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_node_edge_from_2" value="*" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_node_edge_from">
+          <mxGeometry x="0.8" y="15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_node_edge_from_lbl" value="from" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_node_edge_from">
+          <mxGeometry x="0" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="rel_node_edge_to" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" parent="1" source="class_navigation_node" target="class_navigation_edge">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="750" />
+              <mxPoint x="320" y="750" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl_node_edge_to_1" value="1" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_node_edge_to">
+          <mxGeometry x="-0.8" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_node_edge_to_2" value="*" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_node_edge_to">
+          <mxGeometry x="0.8" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_node_edge_to_lbl" value="to" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_node_edge_to">
+          <mxGeometry x="0" y="-15" relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="rel_node_qr" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;" edge="1" parent="1" source="class_navigation_node" target="class_qr_checkpoint">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_node_qr_1" value="1" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_node_qr">
+          <mxGeometry x="-0.8" y="15" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_node_qr_2" value="0..1" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=bottom;" connectable="0" vertex="1" parent="rel_node_qr">
+          <mxGeometry x="0.8" y="15" relative="1" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
