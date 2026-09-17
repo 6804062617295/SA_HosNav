@@ -47,32 +47,19 @@ function login() {
             </p>
         </div>
         <div class="auth-card">
+            <p class="label" id="auth-error" style="color: red; margin-bottom: 10px; display: none;"></p>
             <p class="label">
                 ${r ? "Register with email" : "Sign in with email"}
             </p>
-            ${r ? '<label class="field">Full name</label><input class="input" placeholder="Your full name">' : ""}<label
-                class="field"
-                >Email address</label
-            ><input
-                class="input"
-                type="email"
-                placeholder="you@email.com"
-            /><label class="field">Password</label
-            ><input
-                class="input"
-                type="password"
-                placeholder="••••••••"
-            /><button
-                class="btn primary"
-                style="margin-top:18px"
-                onclick="go('home')"
-            >
-                ${r ? "Create account" : "Log in"}</button
-            ><button
-                class="btn ghost"
-                style="margin-top:10px"
-                onclick="go('${r ? "login" : "register"}')"
-            >
+            ${r ? '<label class="field">Full name</label><input id="auth-name" class="input" placeholder="Your full name">' : ""}
+            <label class="field">Email address</label>
+            <input id="auth-email" class="input" type="email" placeholder="you@email.com"/>
+            <label class="field">Password</label>
+            <input id="auth-password" class="input" type="password" placeholder="••••••••"/>
+            <button class="btn primary" style="margin-top:18px" onclick="handleAuth(${r})">
+                ${r ? "Create account" : "Log in"}
+            </button>
+            <button class="btn ghost" style="margin-top:10px" onclick="go('${r ? "login" : "register"}')">
                 ${r ? "I already have an account" : "Create an account"}
             </button>
             <div class="or">or</div>
@@ -315,3 +302,50 @@ const pages = {
     complete,
 };
 $("#app").innerHTML = pages[state.page]();
+
+// Backend API URL (Replace with your actual Render URL if different)
+const API_URL = 'https://hosnav.onrender.com';
+
+async function handleAuth(isRegister) {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const name = isRegister ? document.getElementById('auth-name').value : undefined;
+    const errorEl = document.getElementById('auth-error');
+    
+    if (!email || !password || (isRegister && !name)) {
+        errorEl.textContent = 'Please fill in all fields';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+        const response = await fetch(API_URL + endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(isRegister ? { email, password, name } : { email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            if (isRegister) {
+                alert('Registration successful! You can now log in.');
+                go('login');
+            } else {
+                // Save token and user info
+                localStorage.setItem('hosnav_token', result.token);
+                localStorage.setItem('hosnav_user', JSON.stringify(result.user));
+                alert('Logged in successfully as ' + result.user.name);
+                go('home');
+            }
+        } else {
+            errorEl.textContent = result.message || 'Authentication failed';
+            errorEl.style.display = 'block';
+        }
+    } catch (err) {
+        errorEl.textContent = 'Failed to connect to server';
+        errorEl.style.display = 'block';
+        console.error(err);
+    }
+}
