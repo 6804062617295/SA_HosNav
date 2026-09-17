@@ -14,8 +14,13 @@
     box-sizing: border-box;
 }
 
-body {
+html, body {
+    height: 100%;
     margin: 0;
+    overflow: hidden;
+}
+
+body {
     background: #dce5ee;
     font-family: "DM Sans", sans-serif;
     color: var(--ink);
@@ -32,8 +37,7 @@ i.ph {
 
 .app-shell {
     width: min(100%, 430px);
-    height: 100dvh;
-    min-height: 720px;
+    height: 100%;
     margin: auto;
     background: #fff;
     position: relative;
@@ -345,7 +349,8 @@ h2 {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 76px;
+    height: calc(76px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
     background: #fff;
     border-top: 1px solid var(--line);
     display: flex;
