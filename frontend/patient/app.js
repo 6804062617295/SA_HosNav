@@ -298,6 +298,17 @@ function map() {
         return '';
     }
 
+    if (state.routeData.instructions.length === 0) {
+        return html`<section class="screen center" style="padding-top:150px">
+            ${topbar("")}
+            <div class="mark" style="margin:0 auto 24px;background:#24a477">✓</div>
+            <p class="eyebrow">You are already here</p>
+            <h1>Arrived</h1>
+            <p class="muted">You are already at your destination.</p>
+            <button class="btn primary" style="margin-top:28px" onclick="go('home')">Return to home</button>
+        </section>`;
+    }
+
     const step = state.routeData.instructions[state.routeStep];
     const isLast = state.routeStep === state.routeData.instructions.length - 1;
 
