@@ -4,7 +4,7 @@ const state = {
     logged: !!localStorage.getItem('staff_token'),
     toast: '',
     patients: [],
-    showQR: null // Will hold the token and queue number if QR is generated
+    showQR: null
 };
 
 const $ = (s) => document.querySelector(s);
@@ -18,41 +18,6 @@ function notify(t) {
     }, 3000);
 }
 
-// ---------------- API Calls ----------------
-
-async function handleLogin() {
-    const email = $('#staff-email').value;
-    const password = $('#staff-pass').value;
-
-    try {
-        const res = await fetch(`${API_URL}/api/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        
-        if (data.success && (data.user.role === 'STAFF' || data.user.role === 'ADMIN')) {
-            localStorage.setItem('staff_token', data.token);
-            localStorage.setItem('staff_user', JSON.stringify(data.user));
-            state.logged = true;
-            fetchQueues(); // Load data
-        } else {
-            notify(data.message || 'Access Denied: Staff only.');
-        }
-    } catch (err) {
-        notify('Failed to connect to server');
-    }
-}
-
-function handleLogout() {
-    localStorage.removeItem('staff_token');
-    localStorage.removeItem('staff_user');
-    state.logged = false;
-    state.patients = [];
-    render();
-}
-
 async function fetchQueues() {
     if (!state.logged) return;
     try {
@@ -62,7 +27,10 @@ async function fetchQueues() {
         const data = await res.json();
         if (data.success) {
             state.patients = data.data;
-            render();
+            // อย่าเพิ่งวาดจอใหม่ถ้ารูป QR ยังโชว์อยู่ (กัน QR กระพริบ)
+            if (!state.showQR) {
+                render();
+            }
         }
     } catch (err) {
         console.error('Failed to fetch queues');
@@ -70,7 +38,6 @@ async function fetchQueues() {
 }
 
 async function createQueue() {
-    // For prototype: Send to Triage (Assume location_id 1 is Triage/Entrance)
     try {
         const res = await fetch(`${API_URL}/api/queues`, {
             method: 'POST',
@@ -82,16 +49,37 @@ async function createQueue() {
         });
         const data = await res.json();
         if (data.success) {
-            state.showQR = {
-                number: data.data.queue_number,
-                token: data.data.token
-            };
-            fetchQueues(); // reload list
+            state.showQR = { number: data.data.queue_number, token: data.data.token };
+            fetchQueues();
         } else {
             notify(data.message || 'Error creating queue');
         }
     } catch (err) {
         notify('Network error');
+    }
+}
+
+async function handleLogin() {
+    const email = $('#staff-email').value;
+    const password = $('#staff-pass').value;
+    try {
+        const res = await fetch(`${API_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.success && (data.user.role === 'STAFF' || data.user.role === 'ADMIN')) {
+            localStorage.setItem('staff_token', data.token);
+            localStorage.setItem('staff_user', JSON.stringify(data.user));
+            state.logged = true;
+            fetchQueues();
+            startPolling();
+        } else {
+            notify(data.message || 'Access Denied');
+        }
+    } catch (err) {
+        notify('Failed to connect to server');
     }
 }
 
@@ -115,7 +103,38 @@ async function updateStatus(id, newStatus) {
     }
 }
 
-// ---------------- UI Rendering ----------------
+function handleLogout() {
+    localStorage.removeItem('staff_token');
+    localStorage.removeItem('staff_user');
+    state.logged = false;
+    state.patients = [];
+    if(window.pollingInterval) clearInterval(window.pollingInterval);
+    render();
+}
+
+function renderQRModal() {
+    setTimeout(() => {
+        if ($('#qrcode')) {
+            $('#qrcode').innerHTML = '';
+            new QRCode(document.getElementById("qrcode"), {
+                text: window.location.origin + "/frontend/patient/qr-login.html?token=" + state.showQR.token,
+                width: 200,
+                height: 200
+            });
+        }
+    }, 50);
+
+    return `
+        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:999;">
+            <div style="background:#fff; padding:30px; border-radius:12px; text-align:center; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <h2 style="margin-top:0">Queue: ${state.showQR.number}</h2>
+                <p style="color:#666; margin-bottom: 20px;">Ask the patient to scan this QR code to track their queue status.</p>
+                <div id="qrcode" style="display:flex; justify-content:center; margin-bottom: 20px;"></div>
+                <button class="btn secondary" style="width: 100%;" onclick="state.showQR = null; render();">Close</button>
+            </div>
+        </div>
+    `;
+}
 
 function login() {
     return `
@@ -145,116 +164,173 @@ function dashboard() {
             (p) => `
         <tr>
             <td><b>${p.queue_number}</b></td>
-            <td>Guest Patient</td>
+            <td>Guest</td>
+            <td><span class="status ${p.status.toLowerCase()}">${p.status}</span></td>
             <td>
-                <span class="badge ${p.status.toLowerCase()}">${p.status}</span>
-            </td>
-            <td>
-                <div class="dropdown">
-                    <button class="icon-btn">Action ▾</button>
-                    <div class="dropdown-content">
-                        <button onclick="updateStatus(${p.queue_id}, 'Called')">Call Queue</button>
-                        <button onclick="updateStatus(${p.queue_id}, 'Processing')">Process</button>
-                        <button onclick="updateStatus(${p.queue_id}, 'Completed')">Complete</button>
-                        <button onclick="updateStatus(${p.queue_id}, 'Skipped')">Skip</button>
-                    </div>
-                </div>
+                <select onchange="updateStatus(${p.queue_id}, this.value); this.value=''">
+                    <option value="">Action...</option>
+                    <option value="Called">Call</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Skipped">Skipped</option>
+                </select>
             </td>
         </tr>
     `
         )
         .join('');
-
-    if (rows === '') {
-        rows = '<tr><td colspan="4" style="text-align:center; padding: 20px;">No queues found.</td></tr>';
-    }
+        
+    if(rows === '') rows = '<tr><td colspan="4" style="text-align:center;padding:20px;">No queues in system</td></tr>';
 
     return `
-        <header class="header">
-            <div class="brand">Hospital<span>Nav</span> Staff</div>
-            <div style="display:flex; gap:16px; align-items:center;">
-                <button class="btn primary" onclick="createQueue()">+ Create Queue (Standard Entry)</button>
-                <div class="avatar" onclick="handleLogout()" style="cursor:pointer;" title="Log out">AS</div>
-            </div>
-        </header>
-        
-        <main class="dashboard">
-            <div class="stats">
-                <div class="stat-card">
-                    <p class="muted">Waiting in Triage</p>
-                    <h2>${state.patients.filter(p => p.status === 'Waiting').length}</h2>
+        <section class="dashboard">
+            <aside class="sidebar">
+                <div class="brand">Hospital<span>Nav</span></div>
+                <p class="portal-sub">Staff portal</p>
+                <button class="side-link active"><i class="ph ph-users-three"></i> Queue management</button>
+                <button class="side-link"><i class="ph ph-chart-bar"></i> Workload insights</button>
+                <button class="side-link"><i class="ph ph-gear"></i> Settings</button>
+                <div class="staff">
+                    <div class="avatar"><i class="ph ph-user"></i></div>
+                    <div>
+                        <b style="cursor:pointer;" onclick="handleLogout()">Log Out</b>
+                        <small>Staff/Admin</small>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <p class="muted">Processing</p>
-                    <h2>${state.patients.filter(p => p.status === 'Called' || p.status === 'Processing').length}</h2>
-                </div>
-                <div class="stat-card">
-                    <p class="muted">Completed Today</p>
-                    <h2>${state.patients.filter(p => p.status === 'Completed').length}</h2>
-                </div>
-            </div>
+            </aside>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Queue No.</th>
-                            <th>Patient Name</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows}
-                    </tbody>
-                </table>
-            </div>
-        </main>
+            <main class="main">
+                <div class="top">
+                    <div>
+                        <h1>Queue management</h1>
+                        <p class="muted">--</p>
+                    </div>
+                    <button class="btn primary" onclick="callNext()"><i class="ph ph-megaphone"></i> Call next queue</button>
+                </div>
+
+                <div class="overview">
+                    <div class="card metric">
+                        <p class="label">Waiting now</p>
+                        <strong>${state.patients.filter(p => p.status === 'Waiting').length}</strong>
+                        <p class="muted">Patients in queue</p>
+                    </div>
+                    <div class="card metric">
+                        <p class="label">In progress</p>
+                        <strong>${state.patients.filter(p => p.status === 'Processing' || p.status === 'Called').length}</strong>
+                        <p class="muted">Current consultations</p>
+                    </div>
+                    <div class="card metric">
+                        <p class="label">Avg. wait</p>
+                        <strong>--</strong>
+                        <p class="muted">--</p>
+                    </div>
+                </div>
+
+                <div class="grid">
+                    <div class="card table-card">
+                        <div class="card-head">
+                            <h2>Waiting patients</h2>
+                            <span class="tag">Live queue</span>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Queue</th>
+                                    <th>Patient</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+
+                    <div>
+                        <div class="card">
+                            <p class="label">Create Queue</p>
+                            <p class="muted" style="margin-bottom: 12px;">Mock Kiosk Ticket Generation (Standard Entry)</p>
+                            <button class="btn primary" style="width: 100%;" onclick="createQueue()">Generate Queue QR</button>
+                        </div>
+                        <br>
+                        <div class="card active-patient">
+                            <p class="label">Current patient</p>
+                            <div class="person">
+                                <div class="avatar"><i class="ph ph-user"></i></div>
+                                <div>
+                                    <h2>--</h2>
+                                    <p class="muted">--</p>
+                                </div>
+                            </div>
+                            <p class="muted">Complete the consultation, then route the patient to their next service.</p>
+                        </div>
+
+                        <div class="card form-card">
+                            <h2>Forward patient</h2>
+                            <p class="muted">Send a digital referral and navigation route.</p>
+
+                            <label>Next service step</label>
+                            <select id="dest">
+                                <option>--</option>
+                            </select>
+
+                            <label>Notes / instructions</label>
+                            <input id="note" class="input" placeholder="Enter notes or instructions">
+
+                            <button class="btn primary" onclick="refer()"><i class="ph ph-paper-plane-tilt"></i> Dispatch referral</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </section>
         
+        <div style="position:fixed; bottom:10px; right:15px; z-index:100;">
+            <button onclick="clearAllQueues()" style="background:none; border:none; color:#ccc; font-size:12px; cursor:pointer;">[Clear All Queues]</button>
+        </div>
+
+        ${state.toast ? `<div class="toast"><i class="ph ph-check-circle"></i> ${state.toast}</div>` : ''}
         ${state.showQR ? renderQRModal() : ''}
     `;
 }
 
-function renderQRModal() {
-    // We will generate the QR code right after the HTML is injected to DOM
-    setTimeout(() => {
-        if ($('#qrcode')) {
-            $('#qrcode').innerHTML = '';
-            new QRCode(document.getElementById("qrcode"), {
-                text: window.location.origin + "/frontend/patient/qr-login.html?token=" + state.showQR.token,
-                width: 200,
-                height: 200
-            });
+async function clearAllQueues() {
+    if (!confirm('Are you sure you want to clear ALL queues? This cannot be undone.')) return;
+    try {
+        const res = await fetch(`${API_URL}/api/queues/clear`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('staff_token')}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            notify('All queues cleared!');
+            fetchQueues();
         }
-    }, 50);
-
-    return `
-        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:999;">
-            <div style="background:#fff; padding:30px; border-radius:12px; text-align:center; max-width: 400px;">
-                <h2>Queue Created: ${state.showQR.number}</h2>
-                <p style="color:#666; margin-bottom: 20px;">Ask the patient to scan this QR code to track their queue status.</p>
-                <div id="qrcode" style="display:flex; justify-content:center; margin-bottom: 20px;"></div>
-                <button class="btn secondary" style="width: 100%;" onclick="state.showQR = null; render();">Close</button>
-            </div>
-        </div>
-    `;
-}
-
-function render() {
-    $('#app').innerHTML = state.logged ? dashboard() : login();
-    if (state.toast) {
-        let t = document.createElement('div');
-        t.className = 'toast';
-        t.innerText = state.toast;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 2900);
+    } catch (err) {
+        notify('Network error');
     }
 }
 
-// Initial boot
+function callNext() {
+    let p = state.patients.find(p => p.status === 'Waiting');
+    if(p) {
+        updateStatus(p.queue_id, 'Called');
+    } else {
+        notify('No waiting patients');
+    }
+}
+
+function refer() { notify('Referral feature coming soon'); }
+
+function render() {
+    $('#app').innerHTML = state.logged ? dashboard() : login();
+}
+
+function startPolling() {
+    if(window.pollingInterval) clearInterval(window.pollingInterval);
+    window.pollingInterval = setInterval(fetchQueues, 5000);
+}
+
 render();
 if (state.logged) {
     fetchQueues();
-    // Poll every 10 seconds for staff
-    setInterval(fetchQueues, 10000);
+    startPolling();
 }

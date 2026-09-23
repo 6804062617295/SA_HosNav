@@ -162,10 +162,22 @@ const forwardQueue = async (req, res) => {
     }
 };
 
+// 6. Clear All Queues (For Testing/Prototype)
+const clearQueues = async (req, res) => {
+    try {
+        await db.query('TRUNCATE TABLE queues CASCADE');
+        res.json({ success: true, message: 'All queues cleared successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 module.exports = {
     createQueue,
     getQueues,
     getQueueByToken,
     updateQueueStatus,
-    forwardQueue
+    forwardQueue,
+    clearQueues
 };

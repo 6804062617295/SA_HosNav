@@ -7,7 +7,8 @@ const {
     getQueues,
     getQueueByToken,
     updateQueueStatus,
-    forwardQueue
+    forwardQueue,
+    clearQueues
 } = require('../controllers/queueController');
 
 // 1. Get queue details by token (Public/Patient - No auth required because patients scan QR without login)
@@ -28,5 +29,8 @@ router.patch('/:id/status', updateQueueStatus);
 
 // 5. Forward queue to a new destination
 router.patch('/:id/forward', forwardQueue);
+
+// 6. Clear all queues (Testing/Prototype)
+router.delete('/clear', clearQueues);
 
 module.exports = router;
