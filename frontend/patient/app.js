@@ -269,7 +269,6 @@ async function handleQRScan(token) {
             localStorage.setItem('queueToken', token);
             state.queueToken = token;
             state.currentQueue = data.data;
-            if(window.html5QrcodeScanner) window.html5QrcodeScanner.clear();
             go('queue');
         } else {
             alert('Invalid or expired QR code');
@@ -366,20 +365,29 @@ $("#app").innerHTML = pages[state.page]();
 
 if (state.page === 'qrlogin') {
     setTimeout(() => {
-        window.html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader",
+        window.html5QrCode = new Html5Qrcode("reader");
+        window.html5QrCode.start(
+            { facingMode: "environment" },
             { fps: 10, qrbox: {width: 250, height: 250} },
-            /* verbose= */ false);
-        window.html5QrcodeScanner.render((decodedText) => {
-            // Usually the text is the full URL: http://.../qr-login.html?token=123
-            let token = decodedText;
-            if (decodedText.includes('token=')) {
-                token = decodedText.split('token=')[1];
+            (decodedText) => {
+                let token = decodedText;
+                if (decodedText.includes('token=')) {
+                    token = decodedText.split('token=')[1];
+                }
+                $('#token-input').value = token;
+                
+                // Stop scanning after success to save battery
+                window.html5QrCode.stop().then(() => {
+                    handleQRScan(token);
+                }).catch(err => {
+                    handleQRScan(token);
+                });
+            },
+            (errorMessage) => {
+                // ignore errors
             }
-            $('#token-input').value = token;
-            handleQRScan(token);
-        }, (error) => {
-            // ignore scanning errors
+        ).catch((err) => {
+            console.error("Camera start failed", err);
         });
     }, 100);
 }
