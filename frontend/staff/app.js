@@ -1,4 +1,5 @@
 const API_URL = 'https://hosnav.onrender.com';
+const PATIENT_URL = 'https://hosnavpatient.vercel.app'; // Patient PWA Vercel URL
 
 const state = {
     logged: !!localStorage.getItem('staff_token'),
@@ -118,7 +119,7 @@ function renderQRModal() {
         if ($('#qrcode')) {
             $('#qrcode').innerHTML = '';
             new QRCode(document.getElementById("qrcode"), {
-                text: window.location.origin + "/frontend/patient/qr-login.html?token=" + state.showQR.token,
+                text: PATIENT_URL + "/frontend/patient/qr-login.html?token=" + state.showQR.token,
                 width: 200,
                 height: 200
             });
@@ -267,17 +268,24 @@ function dashboard() {
 
                         <div class="card form-card">
                             <h2>Forward patient</h2>
-                            <p class="muted">Send a digital referral and navigation route.</p>
+                            <p class="muted">Send patient to the next service point.</p>
+
+                            <label>Queue to forward</label>
+                            <select id="fwd-queue">
+                                <option value="">Select queue...</option>
+                                ${state.patients.filter(p => p.status === 'Processing' || p.status === 'Called').map(p => `<option value="${p.queue_id}">${p.queue_number}</option>`).join('')}
+                            </select>
 
                             <label>Next service step</label>
                             <select id="dest">
-                                <option>--</option>
+                                <option value="1">Triage & Registration</option>
+                                <option value="2">Cardiology Clinic</option>
+                                <option value="3">Orthopedics</option>
+                                <option value="4">X-Ray Department</option>
+                                <option value="5">Pharmacy & Cashier</option>
                             </select>
 
-                            <label>Notes / instructions</label>
-                            <input id="note" class="input" placeholder="Enter notes or instructions">
-
-                            <button class="btn primary" onclick="refer()"><i class="ph ph-paper-plane-tilt"></i> Dispatch referral</button>
+                            <button class="btn primary" onclick="forwardQueue()"><i class="ph ph-paper-plane-tilt"></i> Forward</button>
                         </div>
                     </div>
                 </div>
@@ -319,7 +327,28 @@ function callNext() {
     }
 }
 
-function refer() { notify('Referral feature coming soon'); }
+async function forwardQueue() {
+    const queueId = $('#fwd-queue').value;
+    const destId = $('#dest').value;
+    if(!queueId) return notify('Select a queue to forward');
+    try {
+        const res = await fetch(`${API_URL}/api/queues/${queueId}/forward`, {
+            method: 'PATCH',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('staff_token')}` 
+            },
+            body: JSON.stringify({ destination_id: parseInt(destId) })
+        });
+        const data = await res.json();
+        if (data.success) {
+            notify(`Queue forwarded successfully`);
+            fetchQueues();
+        }
+    } catch (err) {
+        notify('Failed to forward');
+    }
+}
 
 function render() {
     $('#app').innerHTML = state.logged ? dashboard() : login();

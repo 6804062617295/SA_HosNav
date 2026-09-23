@@ -1,4 +1,6 @@
 
+const API_URL = 'https://hosnav.onrender.com';
+
 const state = {
     page: document.body.dataset.page || "login",
     auth: document.body.dataset.auth || "login",
@@ -403,8 +405,6 @@ if(state.queueToken) {
     handleQRScan(state.queueToken, true).catch(()=>null);
 }
 
-// Backend API URL (Replace with your actual Render URL if different)
-const API_URL = 'https://hosnav.onrender.com';
 
 async function handleAuth(isRegister) {
     const email = document.getElementById('auth-email').value;
