@@ -3,9 +3,9 @@
 -- 1. Users (Pre-provisioned Staff and Admin)
 -- Passwords should be hashed in a real backend, using 'hashed_password' as a mock.
 INSERT INTO users (email, password_hash, name, role) VALUES
-('admin@hospital.local', 'hashed_password_admin', 'System Administrator', 'ADMIN'),
-('nurse.a@hospital.local', 'hashed_password_staff', 'Nurse Alice', 'STAFF'),
-('dr.somchai@hospital.local', 'hashed_password_staff', 'Dr. Somchai', 'STAFF');
+('admin@hospital.local', '$2b$10$/x6HzZA7VvcZyw/n0GCWYOx3J8QbEAe2uiXqvXbtcvDo0aQO/Xaz.', 'System Administrator', 'ADMIN'),
+('nurse.a@hospital.local', '$2b$10$/x6HzZA7VvcZyw/n0GCWYOx3J8QbEAe2uiXqvXbtcvDo0aQO/Xaz.', 'Nurse Alice', 'STAFF'),
+('dr.somchai@hospital.local', '$2b$10$/x6HzZA7VvcZyw/n0GCWYOx3J8QbEAe2uiXqvXbtcvDo0aQO/Xaz.', 'Dr. Somchai', 'STAFF');
 
 -- 2. Locations
 INSERT INTO locations (name, building, floor) VALUES
@@ -46,6 +46,31 @@ INSERT INTO navigation_edges (from_node, to_node, instruction, distance_meters) 
 INSERT INTO navigation_edges (from_node, to_node, instruction, distance_meters) VALUES
 (4, 3, 'Turn right and walk 20 meters to Pharmacy & Cashier.', 20.0),
 (3, 4, 'Exit Pharmacy and walk straight to the intersection.', 20.0);
+
+-- Hallway Intersection <-> Elevator A
+INSERT INTO navigation_edges (from_node, to_node, instruction, distance_meters) VALUES
+(4, 5, 'Walk straight 25 meters to the Elevators.', 25.0),
+(5, 4, 'Walk straight 25 meters to the Main Intersection.', 25.0);
+
+-- Elevator A (Fl 1) <-> Elevator B (Fl 2) [Mock building connection/lift]
+INSERT INTO navigation_edges (from_node, to_node, instruction, distance_meters) VALUES
+(5, 6, 'Take the elevator to Floor 2, Building B.', 0.0),
+(6, 5, 'Take the elevator down to Floor 1, Building A.', 0.0);
+
+-- Elevator B (Fl 2) <-> Orthopedics
+INSERT INTO navigation_edges (from_node, to_node, instruction, distance_meters) VALUES
+(6, 7, 'Exit the elevator and walk left to Orthopedics.', 10.0),
+(7, 6, 'Exit Orthopedics and walk right to the Elevator.', 10.0);
+
+-- Elevator B (Fl 2) <-> Elevator B (Fl 3)
+INSERT INTO navigation_edges (from_node, to_node, instruction, distance_meters) VALUES
+(6, 8, 'Take the elevator up to Floor 3.', 0.0),
+(8, 6, 'Take the elevator down to Floor 2.', 0.0);
+
+-- Elevator B (Fl 3) <-> Cardiology
+INSERT INTO navigation_edges (from_node, to_node, instruction, distance_meters) VALUES
+(8, 9, 'Exit the elevator and walk straight to Cardiology Clinic.', 15.0),
+(9, 8, 'Exit Cardiology Clinic and walk straight to the Elevator.', 15.0);
 
 -- 5. QR Checkpoints
 -- Place a QR checkpoint at the main hallway intersection and elevators for lost patients

@@ -15,10 +15,12 @@ app.get('/api/health', (req, res) => {
 
 const authRoutes = require('./src/routes/authRoutes');
 const queueRoutes = require('./src/routes/queueRoutes');
+const navRoutes = require('./src/routes/navigationRoutes');
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/queues', queueRoutes);
+app.use('/api/navigation', navRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
