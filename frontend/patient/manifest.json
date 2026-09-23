@@ -4,6 +4,7 @@
   "description": "Hospital Queue and Navigation App",
   "start_url": "./index.html",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#1466d9",
   "icons": [
