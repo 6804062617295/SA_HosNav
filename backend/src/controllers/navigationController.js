@@ -40,7 +40,7 @@ const getRoute = async (req, res) => {
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error: ' + err.message });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 
@@ -64,7 +64,7 @@ const getCheckpoint = async (req, res) => {
         res.json({ success: true, data: result.rows[0] });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 

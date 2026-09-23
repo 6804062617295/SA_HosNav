@@ -10,13 +10,13 @@ const register = async (req, res) => {
         const { email, password, name } = req.body;
 
         if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-            return res.status(400).json({ success: false, message: 'Invalid email format' });
+            return res.status(400).json({ success: false, message: 'Please enter a valid email address' });
         }
 
         // Check if user exists
         const userExists = await db.query('SELECT * FROM users WHERE email = $1', [email]);
         if (userExists.rows.length > 0) {
-            return res.status(400).json({ success: false, message: 'Email already exists' });
+            return res.status(400).json({ success: false, message: 'This email is already registered' });
         }
 
         // Hash password
@@ -36,7 +36,7 @@ const register = async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 
@@ -48,7 +48,7 @@ const login = async (req, res) => {
         // Find user
         const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
         if (result.rows.length === 0) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return res.status(401).json({ success: false, message: 'Email or password incorrect' });
         }
 
         const user = result.rows[0];
@@ -56,7 +56,7 @@ const login = async (req, res) => {
         // Check password
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return res.status(401).json({ success: false, message: 'Email or password incorrect' });
         }
 
         // Generate Token
@@ -78,7 +78,7 @@ const login = async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 

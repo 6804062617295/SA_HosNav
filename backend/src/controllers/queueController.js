@@ -43,7 +43,7 @@ const createQueue = async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 
@@ -70,7 +70,7 @@ const getQueues = async (req, res) => {
         res.json({ success: true, data: result.rows });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 
@@ -103,7 +103,7 @@ const getQueueByToken = async (req, res) => {
         res.json({ success: true, data: result.rows[0] });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 
@@ -126,7 +126,7 @@ const getMyActiveQueue = async (req, res) => {
         res.json({ success: true, hasQueue: true, token: result.rows[0].token });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 
@@ -158,7 +158,7 @@ const updateQueueStatus = async (req, res) => {
         res.json({ success: true, data: result.rows[0] });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 
@@ -191,7 +191,7 @@ const forwardQueue = async (req, res) => {
         res.json({ success: true, data: result.rows[0], message: 'Queue forwarded successfully' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 
@@ -202,7 +202,7 @@ const clearQueues = async (req, res) => {
         res.json({ success: true, message: 'All queues cleared successfully' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 

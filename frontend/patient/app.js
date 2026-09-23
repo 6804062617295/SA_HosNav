@@ -210,7 +210,7 @@ async function pollQueue() {
                 localStorage.setItem('hosnav_notis', JSON.stringify(notis));
 
                 if(data.data.status === 'Called') {
-                    alert('📣 YOUR QUEUE HAS BEEN CALLED! Please proceed to ' + data.data.destination_name);
+                    alert('It is your turn! Please go to ' + data.data.destination_name);
                 }
             }
             state.currentQueue = data.data;
@@ -238,7 +238,7 @@ async function loadRoute() {
             alert(data.message || 'Could not find a route');
         }
     } catch(e) {
-        alert('Network error loading route');
+        alert('Connection lost. Please try again.');
     }
 }
 
@@ -373,12 +373,12 @@ async function handleQRScan(token, silent = false) {
                 if (appEl) appEl.innerHTML = pages[state.page]();
             }
         } else {
-            if(!silent) alert('Invalid or expired QR code');
+            if(!silent) alert('QR code is incorrect or expired');
             localStorage.removeItem('queueToken');
             state.queueToken = null;
         }
     } catch(err) {
-        if(!silent) alert('Network error');
+        if(!silent) alert('Connection lost');
         // If it's a hard network error on load, we don't necessarily wipe the token, it might just be bad signal
     }
 }
@@ -569,21 +569,21 @@ async function handleAuth(isRegister) {
         
         if (result.success) {
             if (isRegister) {
-                alert('Registration successful! You can now log in.');
+                alert('Account created successfully!');
                 go('login');
             } else {
                 // Save token and user info
                 localStorage.setItem('hosnav_token', result.token);
                 localStorage.setItem('hosnav_user', JSON.stringify(result.user));
-                alert('Logged in successfully as ' + result.user.name);
+                alert('Welcome, ' + result.user.name);
                 go('home');
             }
         } else {
-            errorEl.textContent = result.message || 'Authentication failed';
+            errorEl.textContent = result.message || 'Login failed';
             errorEl.style.display = 'block';
         }
     } catch (err) {
-        errorEl.textContent = 'Failed to connect to server';
+        errorEl.textContent = 'Connection lost. Please try again.';
         errorEl.style.display = 'block';
         console.error(err);
     }

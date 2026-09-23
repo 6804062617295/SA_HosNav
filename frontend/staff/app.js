@@ -54,10 +54,10 @@ async function createQueue() {
             render(); // วาดจอใหม่ทันทีเพื่อให้ Modal เด้งขึ้นมา
             fetchQueues(); // ดึงคิวล่าสุดมาอัปเดต (จะไม่ทำให้จอกระพริบซ้ำเพราะโดนบล็อก render ไว้ใน fetchQueues)
         } else {
-            notify(data.message || 'Error creating queue');
+            notify(data.message || 'Could not create queue');
         }
     } catch (err) {
-        notify('Network error');
+        notify('Connection lost');
     }
 }
 
@@ -78,10 +78,10 @@ async function handleLogin() {
             fetchQueues();
             startPolling();
         } else {
-            notify(data.message || 'Access Denied');
+            notify(data.message || 'Email or password incorrect');
         }
     } catch (err) {
-        notify('Failed to connect to server');
+        notify('Connection lost');
     }
 }
 
@@ -101,7 +101,7 @@ async function updateStatus(id, newStatus) {
             fetchQueues();
         }
     } catch (err) {
-        notify('Failed to update status');
+        notify('Could not update status');
     }
 }
 
@@ -314,7 +314,7 @@ async function clearAllQueues() {
             fetchQueues();
         }
     } catch (err) {
-        notify('Network error');
+        notify('Connection lost');
     }
 }
 
@@ -345,10 +345,10 @@ async function forwardQueue() {
             notify(`Queue forwarded successfully`);
             fetchQueues();
         } else {
-            notify(data.message || 'Failed to forward');
+            notify(data.message || 'Could not send queue');
         }
     } catch (err) {
-        notify('Failed to forward: Network error');
+        notify('Connection lost. Could not send queue.');
     }
 }
 
