@@ -50,7 +50,8 @@ async function createQueue() {
         const data = await res.json();
         if (data.success) {
             state.showQR = { number: data.data.queue_number, token: data.data.token };
-            fetchQueues();
+            render(); // วาดจอใหม่ทันทีเพื่อให้ Modal เด้งขึ้นมา
+            fetchQueues(); // ดึงคิวล่าสุดมาอัปเดต (จะไม่ทำให้จอกระพริบซ้ำเพราะโดนบล็อก render ไว้ใน fetchQueues)
         } else {
             notify(data.message || 'Error creating queue');
         }
