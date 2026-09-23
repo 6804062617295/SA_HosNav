@@ -44,12 +44,12 @@ const nav = (a) =>
         )
         .join("")}</nav>`;
 const topbar = (t) =>
-    `<div class="topbar"><div class="brand">Hospital<span style="color:#1466d9">Nav</span></div><button class="icon-btn" onclick="go('notifications')"><i class="ph ph-bell"></i></button></div>${t ? `<div class="header-row"><div><p class="eyebrow">Hospital companion</p><h1>${t}</h1></div></div>` : ""}`;
+    `<div class="topbar"><div class="brand" style="display:flex; align-items:center; gap:8px;"><img src="assets/Rlogo.png" style="height: 28px;"><span>Hospital<span style="color:#1466d9">Nav</span></span></div><button class="icon-btn" onclick="go('notifications')"><i class="ph ph-bell"></i></button></div>${t ? `<div class="header-row"><div><p class="eyebrow">Hospital companion</p><h1>${t}</h1></div></div>` : ""}`;
 function login() {
     let r = state.auth === "register";
     return html`<section class="screen login">
         <div class="login-head">
-            <div class="mark">✚</div>
+            <img src="assets/Rlogo.png" style="width: 72px; height: 72px; margin-bottom: 24px; border-radius: 18px;">
             <p class="eyebrow">Your care, made simpler</p>
             <h1>${r ? "Create your account" : "Welcome to HospitalNav"}</h1>
             <p class="muted">
