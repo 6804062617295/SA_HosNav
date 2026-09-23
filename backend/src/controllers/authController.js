@@ -9,6 +9,10 @@ const register = async (req, res) => {
     try {
         const { email, password, name } = req.body;
 
+        if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+            return res.status(400).json({ success: false, message: 'Invalid email format' });
+        }
+
         // Check if user exists
         const userExists = await db.query('SELECT * FROM users WHERE email = $1', [email]);
         if (userExists.rows.length > 0) {

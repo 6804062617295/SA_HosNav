@@ -166,7 +166,7 @@ function dashboard() {
             (p) => `
         <tr>
             <td><b>${p.queue_number}</b></td>
-            <td>Guest</td>
+            <td>${p.patient_name || 'Guest'}</td>
             <td><span class="status ${p.status.toLowerCase()}">${p.status}</span></td>
             <td>
                 <select onchange="updateStatus(${p.queue_id}, this.value); this.value=''">
@@ -271,13 +271,13 @@ function dashboard() {
                             <p class="muted">Send patient to the next service point.</p>
 
                             <label>Queue to forward</label>
-                            <select id="fwd-queue">
+                            <select id="fwd-queue" class="input">
                                 <option value="">Select queue...</option>
-                                ${state.patients.filter(p => p.status === 'Processing' || p.status === 'Called').map(p => `<option value="${p.queue_id}">${p.queue_number}</option>`).join('')}
+                                ${state.patients.filter(p => p.status !== 'Completed' && p.status !== 'Skipped').map(p => `<option value="${p.queue_id}">${p.queue_number}</option>`).join('')}
                             </select>
 
                             <label>Next service step</label>
-                            <select id="dest">
+                            <select id="dest" class="input">
                                 <option value="1">Triage & Registration</option>
                                 <option value="2">Cardiology Clinic</option>
                                 <option value="3">Orthopedics</option>
@@ -344,9 +344,11 @@ async function forwardQueue() {
         if (data.success) {
             notify(`Queue forwarded successfully`);
             fetchQueues();
+        } else {
+            notify(data.message || 'Failed to forward');
         }
     } catch (err) {
-        notify('Failed to forward');
+        notify('Failed to forward: Network error');
     }
 }
 

@@ -1,12 +1,18 @@
 const { findShortestPath } = require('../services/navigationService');
 const db = require('../db');
 
-// GET /api/navigation/route?from_node=1&to_node=9
+// GET /api/navigation/route?from_node=1&to_node=9 (or to_location=2)
 const getRoute = async (req, res) => {
     try {
-        const { from_node, to_node } = req.query;
-        if (!from_node || !to_node) {
-            return res.status(400).json({ success: false, message: 'from_node and to_node are required' });
+        let { from_node, to_node, to_location } = req.query;
+        if (!from_node || (!to_node && !to_location)) {
+            return res.status(400).json({ success: false, message: 'from_node and either to_node or to_location are required' });
+        }
+
+        if (to_location && !to_node) {
+            const nodeRes = await db.query('SELECT node_id FROM navigation_nodes WHERE location_id = $1 LIMIT 1', [to_location]);
+            if (nodeRes.rows.length === 0) return res.status(404).json({ success: false, message: 'Destination node not found for location' });
+            to_node = nodeRes.rows[0].node_id;
         }
 
         const result = await findShortestPath(from_node, to_node);

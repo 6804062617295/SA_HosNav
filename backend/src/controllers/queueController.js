@@ -52,9 +52,10 @@ const getQueues = async (req, res) => {
     try {
         const { destination_id } = req.query;
         let query = `
-            SELECT q.*, l.name as destination_name 
+            SELECT q.*, l.name as destination_name, u.name as patient_name
             FROM queues q
             JOIN locations l ON q.destination_id = l.location_id
+            LEFT JOIN users u ON q.patient_id = u.user_id
         `;
         const params = [];
 
@@ -78,10 +79,20 @@ const getQueueByToken = async (req, res) => {
     try {
         const { token } = req.params;
         
+        // If the patient provided a JWT token in the headers, link them to the queue
+        if (req.user && req.user.user_id) {
+            await db.query(`
+                UPDATE queues 
+                SET patient_id = $1 
+                WHERE token = $2 AND patient_id IS NULL
+            `, [req.user.user_id, token]);
+        }
+        
         const result = await db.query(`
-            SELECT q.*, l.name as destination_name 
+            SELECT q.*, l.name as destination_name, u.name as patient_name
             FROM queues q
             JOIN locations l ON q.destination_id = l.location_id
+            LEFT JOIN users u ON q.patient_id = u.user_id
             WHERE q.token = $1
         `, [token]);
 
@@ -97,6 +108,28 @@ const getQueueByToken = async (req, res) => {
 };
 
 // 4. Update Queue Status (Staff/Admin only)
+// Get the active queue for a logged-in patient
+const getMyActiveQueue = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const result = await db.query(`
+            SELECT q.token 
+            FROM queues q
+            WHERE q.patient_id = $1 AND q.status NOT IN ('Completed', 'Skipped')
+            ORDER BY q.created_at DESC
+            LIMIT 1
+        `, [userId]);
+
+        if (result.rows.length === 0) {
+            return res.json({ success: true, hasQueue: false });
+        }
+        res.json({ success: true, hasQueue: true, token: result.rows[0].token });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 const updateQueueStatus = async (req, res) => {
     try {
         const { id } = req.params;
@@ -177,6 +210,7 @@ module.exports = {
     createQueue,
     getQueues,
     getQueueByToken,
+    getMyActiveQueue,
     updateQueueStatus,
     forwardQueue,
     clearQueues

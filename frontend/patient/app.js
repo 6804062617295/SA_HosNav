@@ -8,7 +8,10 @@ const state = {
     destination: "Cardiology Clinic",
     sos: false,
     queueToken: new URLSearchParams(window.location.search).get('token') || localStorage.getItem('queueToken'),
-    currentQueue: null
+    currentQueue: null,
+    routeData: JSON.parse(sessionStorage.getItem('hosnav_routeData') || 'null'),
+    routeStep: parseInt(sessionStorage.getItem('hosnav_routeStep') || '0'),
+    currentNode: parseInt(sessionStorage.getItem('hosnav_currentNode') || '1')
 };
 
 const html = String.raw;
@@ -81,50 +84,53 @@ function login() {
     </section>`;
 }
 function home() {
+    const hasQueue = !!state.currentQueue;
+    
     return html`<section class="screen">
         ${topbar("Home")}
-        <div class="card location">
-            <div class="pin">📍</div>
-            <div>
-                <p class="label">Last scanned checkpoint</p>
-                <b>Entrance lobby</b>
-                <p class="muted">Scan a nearby QR checkpoint if you get lost</p>
-                <button class="btn secondary" style="margin-top: 10px; padding: 6px 12px; font-size: 14px;" onclick="alert('Mock: Scanned QR Checkpoint at Elevator Zone B. Current location updated.')">
-                    Scan Checkpoint QR
-                </button>
-            </div>
-        </div>
+        
         <div class="card appointment">
-            <p class="label">Next appointment · Today, 10:30</p>
-            <h2>Cardiology Clinic</h2>
-            <p class="muted">Dr. Somchai · Room 304, Building B</p>
+            <p class="label">${hasQueue ? "Current Destination" : "Welcome to HosNav"}</p>
+            <h2>${hasQueue ? state.currentQueue.destination_name : "No active queue"}</h2>
+            <p class="muted">${hasQueue ? "Please follow the queue status or get directions." : "Scan a queue QR code from the staff to start."}</p>
+            
             <div style="display:flex; gap:10px; margin-top:10px;">
-                <button class="btn route-btn" style="flex:1;" onclick="go('route')">
+                ${hasQueue ? 
+                `<button class="btn route-btn" style="flex:1;" onclick="go('route')">
                     Get route →
                 </button>
-                <button class="btn primary" style="flex:1;" onclick="go('qrlogin')">
+                <button class="btn primary" style="flex:1;" onclick="go('queue')">
+                    View Queue
+                </button>` 
+                : 
+                `<button class="btn primary" style="flex:1;" onclick="go('qrlogin')">
                     <i class="ph ph-qr-code"></i> Scan Queue QR
-                </button>
+                </button>`
+                }
             </div>
         </div>
+
+        ${hasQueue ? `
         <div class="stats">
             <div class="card stat">
                 <p class="label">Queue number</p>
-                <strong>A-124</strong>
-                <p class="muted">4 patients ahead</p>
+                <strong>${state.currentQueue.queue_number}</strong>
+                <p class="muted">Status: ${state.currentQueue.status}</p>
             </div>
             <div class="card stat">
                 <p class="label">Estimated wait</p>
-                <strong>12 min</strong>
+                <strong>-- min</strong>
                 <p class="muted">Updated now</p>
             </div>
         </div>
+        ` : ''}
+
         <div class="card">
             <p class="label">Your visit today</p>
             <div class="timeline">
-                <div class="step done">Registration complete</div>
-                <div class="step active">Doctor examination · Room 304</div>
-                <div class="step">Prescription & payment</div>
+                <div class="step ${hasQueue ? 'done' : ''}">Get Queue</div>
+                <div class="step ${hasQueue && state.currentQueue.status === 'Called' ? 'active' : ''}">Go to destination</div>
+                <div class="step ${hasQueue && state.currentQueue.status === 'Completed' ? 'done' : ''}">Receive service</div>
             </div>
         </div>
         ${nav("home")}
@@ -185,39 +191,86 @@ function queue() {
 }
 
 async function pollQueue() {
-    if(state.page !== 'queue' || !state.queueToken) return;
+    if(!state.queueToken) return;
     try {
         const res = await fetch(`${API_URL}/api/queues/track/${state.queueToken}`);
         const data = await res.json();
         if(data.success) {
-            // Check if status changed to Called and notify
-            if(state.currentQueue && state.currentQueue.status !== 'Called' && data.data.status === 'Called') {
-                alert('📣 YOUR QUEUE HAS BEEN CALLED! Please proceed to ' + data.data.destination_name);
+            // Check if status changed
+            if(state.currentQueue && state.currentQueue.status !== data.data.status) {
+                // Save notification
+                let notis = [];
+                try { notis = JSON.parse(localStorage.getItem('hosnav_notis')) || []; } catch(e){}
+                notis.unshift({
+                    title: `Queue Status: ${data.data.status}`,
+                    message: `Your queue is now ${data.data.status}. Destination: ${data.data.destination_name}`,
+                    time: new Date().toISOString(),
+                    type: data.data.status === 'Called' ? 'alert' : 'info'
+                });
+                localStorage.setItem('hosnav_notis', JSON.stringify(notis));
+
+                if(data.data.status === 'Called') {
+                    alert('📣 YOUR QUEUE HAS BEEN CALLED! Please proceed to ' + data.data.destination_name);
+                }
             }
             state.currentQueue = data.data;
-            $("#app").innerHTML = pages[state.page](); // Re-render silently
+            const appEl = document.getElementById("app");
+            if (appEl) appEl.innerHTML = pages[state.page](); // Re-render silently
         }
     } catch(err){}
 }
 
+async function loadRoute() {
+    if (!state.currentQueue) return;
+    try {
+        const fromNode = state.currentNode || 1; // Default to 1 (Triage) if not set
+        const toLocation = state.currentQueue.destination_id;
+        const res = await fetch(`${API_URL}/api/navigation/route?from_node=${fromNode}&to_location=${toLocation}`);
+        const data = await res.json();
+        if (data.success) {
+            state.routeData = data.data;
+            state.routeStep = 0;
+            sessionStorage.setItem('hosnav_routeData', JSON.stringify(data.data));
+            sessionStorage.setItem('hosnav_routeStep', '0');
+            const appEl = document.getElementById("app");
+            if (appEl) appEl.innerHTML = pages[state.page]();
+        } else {
+            alert(data.message || 'Could not find a route');
+        }
+    } catch(e) {
+        alert('Network error loading route');
+    }
+}
+
 function route() {
+    if (!state.routeData) {
+        loadRoute();
+        return html`<section class="screen center">
+            ${topbar("Route preview")}
+            <p>Loading route...</p>
+        </section>`;
+    }
+    
+    // Find destination node info
+    const destNode = state.routeData.nodes_info[state.routeData.nodes_info.length - 1];
+    
     return html`<section class="screen">
         ${topbar("Route preview")}
         <div class="card">
             <p class="label">From</p>
-            <b>Building A · Entrance lobby</b>
+            <b>Current Location (Node ${state.routeData.path[0]})</b>
             <p class="muted" style="margin:12px 0">↓</p>
             <p class="label">To</p>
-            <b>Cardiology Clinic · Room 304</b>
+            <b>${destNode ? destNode.name : state.currentQueue.destination_name}</b>
         </div>
         <div class="stats">
             <div class="card stat">
                 <p class="label">Distance</p>
-                <strong>45m</strong>
+                <strong>${state.routeData.total_distance}m</strong>
             </div>
             <div class="card stat">
                 <p class="label">Time</p>
-                <strong>2min</strong>
+                <strong>~${Math.ceil(state.routeData.total_distance / 60)} min</strong>
             </div>
         </div>
         <button class="btn primary" onclick="go('map')">
@@ -225,24 +278,47 @@ function route() {
         </button>
     </section>`;
 }
+
+function nextStep() {
+    if (state.routeData && state.routeStep < state.routeData.instructions.length - 1) {
+        state.routeStep++;
+        sessionStorage.setItem('hosnav_routeStep', state.routeStep.toString());
+        const appEl = document.getElementById("app");
+        if (appEl) appEl.innerHTML = pages[state.page]();
+    } else {
+        sessionStorage.removeItem('hosnav_routeData');
+        sessionStorage.removeItem('hosnav_routeStep');
+        go('complete');
+    }
+}
+
 function map() {
+    if (!state.routeData) {
+        go('route');
+        return '';
+    }
+
+    const step = state.routeData.instructions[state.routeStep];
+    const isLast = state.routeStep === state.routeData.instructions.length - 1;
+
     return html`<section class="screen">
         ${topbar("Navigation")}
-        <div class="mapbox">
-            <div class="route-line"></div>
-            <div class="map-pin start">⌖</div>
-            <div class="map-pin end">✚</div>
+        <div class="mapbox" style="background: #e0e0e0; display:flex; align-items:center; justify-content:center; flex-direction:column; color:#666;">
+            <!-- Real map UI will go here, currently placeholder -->
+            <i class="ph ph-map-trifold" style="font-size:48px; opacity:0.5; margin-bottom:10px;"></i>
+            <p>Map View Placeholder</p>
+            <small>Walking from Node ${step.from} to Node ${step.to}</small>
         </div>
         <div class="card instruction">
-            <b>Walk straight for 15 metres</b>
-            <p class="muted">Pass reception then turn left.</p>
+            <b>${step.instruction}</b>
+            <p class="muted">Distance: ${step.distance}m</p>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
             <button class="btn secondary" style="flex: 1; padding: 12px 10px; font-size: 14px;" onclick="go('scan')">
-                <i class="ph ph-qr-code"></i> Scan Checkpoint
+                <i class="ph ph-qr-code"></i> Checkpoint
             </button>
-            <button class="btn primary" style="flex: 1;" onclick="go('complete')">
-                Next step
+            <button class="btn primary" style="flex: 1;" onclick="nextStep()">
+                ${isLast ? "Arrive" : "Next step"}
             </button>
         </div>
     </section>`;
@@ -265,7 +341,12 @@ function qrlogin() {
 async function handleQRScan(token, silent = false) {
     if(!token) return;
     try {
-        const res = await fetch(`${API_URL}/api/queues/track/${token}`);
+        const headers = {};
+        const userToken = localStorage.getItem('hosnav_token');
+        if (userToken) {
+            headers['Authorization'] = `Bearer ${userToken}`;
+        }
+        const res = await fetch(`${API_URL}/api/queues/track/${token}`, { headers });
         if (!res.ok && res.status !== 404) throw new Error('Network response was not ok');
         const data = await res.json();
         
@@ -273,7 +354,13 @@ async function handleQRScan(token, silent = false) {
             localStorage.setItem('queueToken', token);
             state.queueToken = token;
             state.currentQueue = data.data;
-            if(!silent && state.page !== 'queue') go('queue');
+            if(!silent && state.page !== 'queue') {
+                go('queue');
+            } else {
+                // Re-render immediately on all pages to ensure data is fresh
+                const appEl = document.getElementById("app");
+                if (appEl) appEl.innerHTML = pages[state.page]();
+            }
         } else {
             if(!silent) alert('Invalid or expired QR code');
             localStorage.removeItem('queueToken');
@@ -303,16 +390,34 @@ function scan() {
     </section>`;
 }
 function notifications() {
+    let notis = [];
+    try {
+        notis = JSON.parse(localStorage.getItem('hosnav_notis')) || [];
+    } catch(e){}
+
+    if (notis.length === 0) {
+        return html`<section class="screen">
+            ${topbar("Notifications")}
+            <div style="text-align:center; margin-top:50px; color:#888;">
+                <i class="ph ph-bell-slash" style="font-size: 48px;"></i>
+                <p>No new notifications</p>
+            </div>
+            ${nav("")}
+        </section>`;
+    }
+
     return html`<section class="screen">
         ${topbar("Notifications")}
-        <div class="card">
-            <b>Your queue is getting close</b>
-            <p class="muted">One patient ahead. Please stay near Cardiology.</p>
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <button class="btn ghost" style="padding:4px 8px; font-size:12px;" onclick="localStorage.removeItem('hosnav_notis'); go('notifications');">Clear all</button>
         </div>
-        <div class="card">
-            <b>Check-in complete</b>
-            <p class="muted">HN 992-001-24 registered successfully.</p>
+        ${notis.map(n => `
+        <div class="card" style="border-left: 4px solid ${n.type === 'alert' ? '#e53935' : '#1e88e5'};">
+            <b>${n.title}</b>
+            <p class="muted">${n.message}</p>
+            <small style="color:#aaa; font-size:10px;">${new Date(n.time).toLocaleTimeString()}</small>
         </div>
+        `).join('')}
         ${nav("")}
     </section>`;
 }
@@ -401,9 +506,26 @@ if (state.page === 'qrlogin') {
 
 // Queue Polling
 setInterval(pollQueue, 5000);
-if(state.queueToken) {
-    handleQRScan(state.queueToken, true).catch(()=>null);
+
+async function syncActiveQueue() {
+    // If they have a token in URL or localStorage, track it
+    if(state.queueToken) {
+        await handleQRScan(state.queueToken, true).catch(()=>null);
+    }
+    // If they are logged in but don't have a queueToken, check backend
+    else if(localStorage.getItem('hosnav_token')) {
+        try {
+            const res = await fetch(`${API_URL}/api/queues/my-active`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('hosnav_token')}` }
+            });
+            const data = await res.json();
+            if(data.success && data.hasQueue) {
+                await handleQRScan(data.token, true);
+            }
+        } catch(e) {}
+    }
 }
+syncActiveQueue();
 
 
 async function handleAuth(isRegister) {
@@ -414,6 +536,12 @@ async function handleAuth(isRegister) {
     
     if (!email || !password || (isRegister && !name)) {
         errorEl.textContent = 'Please fill in all fields';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+        errorEl.textContent = 'Please enter a valid email address';
         errorEl.style.display = 'block';
         return;
     }
