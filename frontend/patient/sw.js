@@ -1,11 +1,11 @@
-const CACHE_NAME = 'hosnav-pwa-v21';
+const CACHE_NAME = 'hosnav-pwa-v22';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './app.js',
     './styles.css',
-    './temp_pwa/icon-192.png',
-    './temp_pwa/icon-512.png'
+    './assets/Rlogo.png'
+    
 ];
 
 // Install Event

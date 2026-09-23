@@ -9,13 +9,13 @@
   "theme_color": "#1466d9",
   "icons": [
     {
-      "src": "./temp_pwa/icon-192.png",
+      "src": "./assets/Rlogo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./temp_pwa/icon-512.png",
+      "src": "./assets/Rlogo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
