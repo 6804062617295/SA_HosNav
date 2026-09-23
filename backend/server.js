@@ -14,20 +14,11 @@ app.get('/api/health', (req, res) => {
 });
 
 const authRoutes = require('./src/routes/authRoutes');
+const queueRoutes = require('./src/routes/queueRoutes');
 
 // Routes
 app.use('/api/auth', authRoutes);
-
-// Mock Route for Queues (to connect with Frontend before DB is ready)
-app.get('/api/queues', (req, res) => {
-    res.json({
-        success: true,
-        data: [
-            { id: 1, queue_number: 'Q-001', destination: 'Triage', status: 'Processing' },
-            { id: 2, queue_number: 'Q-002', destination: 'Triage', status: 'Waiting' }
-        ]
-    });
-});
+app.use('/api/queues', queueRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
