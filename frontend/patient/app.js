@@ -90,11 +90,11 @@ function home() {
         ${topbar("Home")}
         
         <div class="card appointment">
-            <p class="label">${hasQueue ? "Current Destination" : "Welcome to HosNav"}</p>
-            <h2>${hasQueue ? state.currentQueue.destination_name : "No active queue"}</h2>
-            <p class="muted">${hasQueue ? "Please follow the queue status or get directions." : "Scan a queue QR code from the staff to start."}</p>
+            <p class="label">${hasQueue ? "Destination" : "Welcome"}</p>
+            <h2>${hasQueue ? state.currentQueue.destination_name : "No Queue"}</h2>
+            <p class="muted" style="margin-bottom:15px;">${hasQueue ? "Track your queue or get route." : "Scan QR to get your queue."}</p>
             
-            <div style="display:flex; gap:10px; margin-top:10px;">
+            <div style="display:flex; gap:10px;">
                 ${hasQueue ? 
                 `<button class="btn route-btn" style="flex:1;" onclick="go('route')">
                     Get route →
@@ -104,7 +104,7 @@ function home() {
                 </button>` 
                 : 
                 `<button class="btn primary" style="flex:1;" onclick="go('qrlogin')">
-                    <i class="ph ph-qr-code"></i> Scan Queue QR
+                    <i class="ph ph-qr-code"></i> Scan QR
                 </button>`
                 }
             </div>
@@ -112,25 +112,25 @@ function home() {
 
         ${hasQueue ? `
         <div class="stats">
-            <div class="card stat">
-                <p class="label">Queue number</p>
+            <div class="card stat" style="margin-bottom:0;">
+                <p class="label">Queue</p>
                 <strong>${state.currentQueue.queue_number}</strong>
-                <p class="muted">Status: ${state.currentQueue.status}</p>
+                <p class="muted">${state.currentQueue.status}</p>
             </div>
-            <div class="card stat">
-                <p class="label">Estimated wait</p>
+            <div class="card stat" style="margin-bottom:0;">
+                <p class="label">Wait time</p>
                 <strong>-- min</strong>
-                <p class="muted">Updated now</p>
+                <p class="muted">Updating</p>
             </div>
         </div>
         ` : ''}
 
-        <div class="card">
-            <p class="label">Your visit today</p>
+        <div class="card" style="${hasQueue ? 'margin-top:12px;' : ''}">
+            <p class="label">Timeline</p>
             <div class="timeline">
                 <div class="step ${hasQueue ? 'done' : ''}">Get Queue</div>
-                <div class="step ${hasQueue && state.currentQueue.status === 'Called' ? 'active' : ''}">Go to destination</div>
-                <div class="step ${hasQueue && state.currentQueue.status === 'Completed' ? 'done' : ''}">Receive service</div>
+                <div class="step ${hasQueue && state.currentQueue.status === 'Called' ? 'active' : ''}">Go to clinic</div>
+                <div class="step ${hasQueue && state.currentQueue.status === 'Completed' ? 'done' : ''}">Service done</div>
             </div>
         </div>
         ${nav("home")}
