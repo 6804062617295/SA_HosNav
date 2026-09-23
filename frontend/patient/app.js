@@ -260,21 +260,26 @@ function qrlogin() {
     </section>`;
 }
 
-async function handleQRScan(token) {
-    if(!token) return alert('Enter a token');
+async function handleQRScan(token, silent = false) {
+    if(!token) return;
     try {
         const res = await fetch(`${API_URL}/api/queues/track/${token}`);
+        if (!res.ok && res.status !== 404) throw new Error('Network response was not ok');
         const data = await res.json();
+        
         if(data.success) {
             localStorage.setItem('queueToken', token);
             state.queueToken = token;
             state.currentQueue = data.data;
-            go('queue');
+            if(!silent && state.page !== 'queue') go('queue');
         } else {
-            alert('Invalid or expired QR code');
+            if(!silent) alert('Invalid or expired QR code');
+            localStorage.removeItem('queueToken');
+            state.queueToken = null;
         }
     } catch(err) {
-        alert('Network error');
+        if(!silent) alert('Network error');
+        // If it's a hard network error on load, we don't necessarily wipe the token, it might just be bad signal
     }
 }
 function scan() {
@@ -395,7 +400,7 @@ if (state.page === 'qrlogin') {
 // Queue Polling
 setInterval(pollQueue, 5000);
 if(state.queueToken) {
-    handleQRScan(state.queueToken).catch(()=>null);
+    handleQRScan(state.queueToken, true).catch(()=>null);
 }
 
 // Backend API URL (Replace with your actual Render URL if different)
