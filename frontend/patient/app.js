@@ -96,9 +96,14 @@ function home() {
             <p class="label">Next appointment · Today, 10:30</p>
             <h2>Cardiology Clinic</h2>
             <p class="muted">Dr. Somchai · Room 304, Building B</p>
-            <button class="btn route-btn" onclick="go('route')">
-                Get route →
-            </button>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn route-btn" style="flex:1;" onclick="go('route')">
+                    Get route →
+                </button>
+                <button class="btn primary" style="flex:1;" onclick="go('qrlogin')">
+                    <i class="ph ph-qr-code"></i> Scan Queue QR
+                </button>
+            </div>
         </div>
         <div class="stats">
             <div class="card stat">
@@ -243,19 +248,35 @@ function map() {
 function qrlogin() {
     return html`<section class="screen login center">
         ${topbar("")}
-        <div class="qrbox"></div>
-        <h2>Scan your appointment QR</h2>
+        <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; margin-top: 20px;"></div>
+        <h2 style="margin-top:20px;">Scan your appointment QR</h2>
         <p class="muted">
             Access your queue and navigation without an account.
         </p>
-        <button
-            class="btn primary"
-            style="margin-top:25px"
-            onclick="go('home')"
-        >
-            Simulate QR scan
-        </button>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <input id="token-input" class="input" style="text-align:center; flex:1;" placeholder="Or enter Token manually" value="${state.queueToken || ''}">
+            <button class="btn primary" onclick="handleQRScan($('#token-input').value)">Connect</button>
+        </div>
     </section>`;
+}
+
+async function handleQRScan(token) {
+    if(!token) return alert('Enter a token');
+    try {
+        const res = await fetch(`${API_URL}/api/queues/track/${token}`);
+        const data = await res.json();
+        if(data.success) {
+            localStorage.setItem('queueToken', token);
+            state.queueToken = token;
+            state.currentQueue = data.data;
+            if(window.html5QrcodeScanner) window.html5QrcodeScanner.clear();
+            go('queue');
+        } else {
+            alert('Invalid or expired QR code');
+        }
+    } catch(err) {
+        alert('Network error');
+    }
 }
 function scan() {
     return html`<section class="screen center">
@@ -342,6 +363,26 @@ const pages = {
     complete,
 };
 $("#app").innerHTML = pages[state.page]();
+
+if (state.page === 'qrlogin') {
+    setTimeout(() => {
+        window.html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader",
+            { fps: 10, qrbox: {width: 250, height: 250} },
+            /* verbose= */ false);
+        window.html5QrcodeScanner.render((decodedText) => {
+            // Usually the text is the full URL: http://.../qr-login.html?token=123
+            let token = decodedText;
+            if (decodedText.includes('token=')) {
+                token = decodedText.split('token=')[1];
+            }
+            $('#token-input').value = token;
+            handleQRScan(token);
+        }, (error) => {
+            // ignore scanning errors
+        });
+    }, 100);
+}
 
 // Queue Polling
 setInterval(pollQueue, 5000);
