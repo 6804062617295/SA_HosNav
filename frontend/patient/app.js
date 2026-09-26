@@ -333,11 +333,18 @@ function nextStep() {
     if (state.routeData && state.routeStep < state.routeData.instructions.length - 1) {
         state.routeStep++;
         sessionStorage.setItem('hosnav_routeStep', state.routeStep.toString());
-        const appEl = document.getElementById("app");
-        if (appEl) appEl.innerHTML = pages[state.page]();
+        if (window.render) window.render();
     } else {
+        // Arrival: update current node
+        if (state.routeData && state.routeData.instructions.length > 0) {
+            const lastInst = state.routeData.instructions[state.routeData.instructions.length - 1];
+            state.currentNode = lastInst.to;
+            sessionStorage.setItem('hosnav_currentNode', state.currentNode.toString());
+        }
         sessionStorage.removeItem('hosnav_routeData');
         sessionStorage.removeItem('hosnav_routeStep');
+        state.routeData = null;
+        state.routeStep = 0;
         go('complete');
     }
 }
@@ -367,11 +374,16 @@ function map() {
     const currentFloor = stepNode ? stepNode.node_floor : 1;
     const floorImg = currentFloor === 1 ? 'assets/map/floor 1.svg' : 'assets/map/floor 2.svg';
 
-    // Generate polyline points for all nodes in the path that belong to the current floor
+    // Generate polyline points for the remaining nodes in the path that belong to the current floor
+    let startIndex = state.routeData.path.indexOf(step.from);
+    if (startIndex === -1) startIndex = 0;
+
     let polylinePoints = [];
     let currentX = 0, currentY = 0;
+    let nextX = 0, nextY = 0;
     
-    for (let id of state.routeData.path) {
+    for (let i = startIndex; i < state.routeData.path.length; i++) {
+        let id = state.routeData.path[i];
         const n = state.routeData.nodes_info.find(x => x.node_id === id);
         if (n && n.node_floor == currentFloor) {
             polylinePoints.push(`${n.pos_x},${n.pos_y}`);
@@ -379,31 +391,63 @@ function map() {
                 currentX = n.pos_x;
                 currentY = n.pos_y;
             }
+            if (id === step.to) {
+                nextX = n.pos_x;
+                nextY = n.pos_y;
+            }
+        } else if (n && n.node_floor != currentFloor) {
+            // Stop drawing polyline if it goes to another floor
+            break;
         }
     }
     
     const polylineStr = polylinePoints.join(" ");
 
+    // Determine if it's the first step on this floor (to show overview map)
+    let isFirstStepOnFloor = true;
+    if (state.routeStep > 0) {
+        const prevStep = state.routeData.instructions[state.routeStep - 1];
+        const prevStepNode = state.routeData.nodes_info.find(n => n.node_id === prevStep.from);
+        if (prevStepNode && prevStepNode.node_floor === currentFloor) {
+            isFirstStepOnFloor = false;
+        }
+    }
+
+    // ViewBox zoom logic
+    let viewBox = "0 0 500 500";
+    if (!isFirstStepOnFloor && currentX && nextX) {
+        const cx = (currentX + nextX) / 2;
+        const cy = (currentY + nextY) / 2;
+        let vX = Math.max(0, cx - 125);
+        let vY = Math.max(0, cy - 125);
+        if (vX + 250 > 500) vX = 500 - 250;
+        if (vY + 250 > 500) vY = 500 - 250;
+        viewBox = `${vX} ${vY} 250 250`;
+    }
+
     return html`<section class="screen">
         ${topbar("Navigation")}
-        <div class="mapbox" style="position:relative; background:#fff; overflow:hidden;">
-            <!-- Real map UI with SVG -->
-            <svg viewBox="0 0 500 500" width="100%" height="100%" style="display:block; max-width:500px; margin:0 auto; background:#f4f6fa; border:1px solid #e6ebf0; border-radius:12px;">
+        <div class="mapbox" style="position:relative; background:#fff; overflow:hidden; border-radius:12px;">
+            <svg viewBox="${viewBox}" width="100%" height="100%" style="display:block; max-width:500px; margin:0 auto; background:#f4f6fa; border:1px solid #e6ebf0; transition: all 0.8s ease-in-out;">
                 <image href="${floorImg}" width="500" height="500" preserveAspectRatio="none" />
                 <polyline points="${polylineStr}" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linejoin="round" stroke-dasharray="8 4" opacity="0.8" />
-                <circle cx="${currentX}" cy="${currentY}" r="6" fill="var(--blue)" stroke="#fff" stroke-width="2" />
+                <circle cx="${currentX}" cy="${currentY}" r="6" fill="var(--blue)">
+                    <animate attributeName="r" values="6;20" dur="1.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.8;0" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="${currentX}" cy="${currentY}" r="7" fill="var(--blue)" stroke="#fff" stroke-width="2" />
             </svg>
         </div>
         <div class="card instruction" style="margin-top:12px">
             <b>${step.instruction}</b>
-            <p class="muted">Distance: ${step.distance}m</p>
+            <p class="muted">Distance: ${Number(step.distance).toFixed(1)}m</p>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
             <button class="btn secondary" style="flex: 1; padding: 12px 10px; font-size: 14px;" onclick="go('scan')">
                 <i class="ph ph-qr-code"></i> Checkpoint
             </button>
             ${isLast 
-                ? html`<button class="btn primary" style="flex: 2" onclick="go('complete')">Finish</button>` 
+                ? html`<button class="btn primary" style="flex: 2" onclick="nextStep()">Finish</button>` 
                 : html`<button class="btn primary" style="flex: 2" onclick="nextStep()">Next Step</button>`
             }
         </div>

@@ -56,7 +56,7 @@ async function findShortestPath(startNodeId, endNodeId) {
         if (smallest === parseInt(endNodeId)) {
             // We found the path
             const path = [];
-            const instructions = [];
+            const rawInstructions = [];
             let curr = smallest;
             let totalDistance = 0;
 
@@ -66,7 +66,7 @@ async function findShortestPath(startNodeId, endNodeId) {
                 
                 // Find the edge that connects prev.node to curr
                 const edgeUsed = graph[prev].find(e => e.node === curr);
-                instructions.push({
+                rawInstructions.push({
                     from: prev,
                     to: curr,
                     instruction: edgeUsed.instruction,
@@ -78,10 +78,34 @@ async function findShortestPath(startNodeId, endNodeId) {
             }
             path.push(parseInt(startNodeId));
             
+            rawInstructions.reverse();
+            path.reverse();
+
+            // Merge consecutive steps with the SAME instruction (e.g., straight line)
+            const mergedInstructions = [];
+            let currentStep = null;
+
+            for (let i = 0; i < rawInstructions.length; i++) {
+                let rStep = rawInstructions[i];
+                if (!currentStep) {
+                    currentStep = { ...rStep };
+                } else if (currentStep.instruction === rStep.instruction) {
+                    // Merge!
+                    currentStep.to = rStep.to;
+                    currentStep.distance += rStep.distance;
+                } else {
+                    mergedInstructions.push(currentStep);
+                    currentStep = { ...rStep };
+                }
+            }
+            if (currentStep) {
+                mergedInstructions.push(currentStep);
+            }
+
             return {
                 success: true,
-                path: path.reverse(),
-                instructions: instructions.reverse(),
+                path: path,
+                instructions: mergedInstructions,
                 totalDistance: totalDistance
             };
         }
