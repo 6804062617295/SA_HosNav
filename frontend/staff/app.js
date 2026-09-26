@@ -5,6 +5,7 @@ const state = {
     logged: !!localStorage.getItem('staff_token'),
     toast: '',
     patients: [],
+    locations: [],
     showQR: null
 };
 
@@ -17,6 +18,20 @@ function notify(t) {
         state.toast = '';
         render();
     }, 3000);
+}
+
+
+async function fetchLocations() {
+    try {
+        const res = await fetch(`${API_URL}/api/queues/locations`);
+        const data = await res.json();
+        if (data.success) {
+            state.locations = data.data;
+            if (state.logged && !state.showQR) render();
+        }
+    } catch (err) {
+        console.error('Failed to fetch locations');
+    }
 }
 
 async function fetchQueues() {
@@ -46,13 +61,13 @@ async function createQueue() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('staff_token')}` 
             },
-            body: JSON.stringify({ destination_id: 1 })
+            body: JSON.stringify({})
         });
         const data = await res.json();
         if (data.success) {
             state.showQR = { number: data.data.queue_number, token: data.data.token };
-            render(); // วาดจอใหม่ทันทีเพื่อให้ Modal เด้งขึ้นมา
-            fetchQueues(); // ดึงคิวล่าสุดมาอัปเดต (จะไม่ทำให้จอกระพริบซ้ำเพราะโดนบล็อก render ไว้ใน fetchQueues)
+            render();
+            fetchQueues();
         } else {
             notify(data.message || 'Could not create queue');
         }
@@ -76,6 +91,7 @@ async function handleLogin() {
             localStorage.setItem('staff_user', JSON.stringify(data.user));
             state.logged = true;
             fetchQueues();
+            fetchLocations();
             startPolling();
         } else {
             notify(data.message || 'Email or password incorrect');
@@ -249,8 +265,8 @@ function dashboard() {
 
                     <div>
                         <div class="card">
-                            <p class="label">Create Queue</p>
-                            <p class="muted" style="margin-bottom: 12px;">Mock Kiosk Ticket Generation (Standard Entry)</p>
+                            <p class="label">สร้าง QR รับคิวใหม่</p>
+                            <p class="muted" style="margin-bottom: 12px;">แจก QR Code คิวสำหรับผู้ป่วยใหม่</p>
                             <button class="btn primary" style="width: 100%;" onclick="createQueue()">Generate Queue QR</button>
                         </div>
                         <br>
@@ -278,11 +294,8 @@ function dashboard() {
 
                             <label>Next service step</label>
                             <select id="dest" class="input">
-                                <option value="1">Triage & Registration</option>
-                                <option value="2">Cardiology Clinic</option>
-                                <option value="3">Orthopedics</option>
-                                <option value="4">X-Ray Department</option>
-                                <option value="5">Pharmacy & Cashier</option>
+                                <option value="">Select next service...</option>
+                                ${state.locations.map(loc => `<option value="${loc.location_id}">${loc.name} (Floor ${loc.floor})</option>`).join('')}
                             </select>
 
                             <button class="btn primary" onclick="forwardQueue()"><i class="ph ph-paper-plane-tilt"></i> Forward</button>
@@ -362,6 +375,7 @@ function startPolling() {
 }
 
 render();
+fetchLocations();
 if (state.logged) {
     fetchQueues();
     startPolling();

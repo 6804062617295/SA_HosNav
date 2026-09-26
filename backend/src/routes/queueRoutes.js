@@ -3,6 +3,7 @@ const router = express.Router();
 const verifyToken = require('../middleware/authMiddleware');
 const { requireStaffOrAdmin } = require('../middleware/roleMiddleware');
 const {
+    getLocations,
     createQueue,
     getQueues,
     getQueueByToken,
@@ -23,6 +24,9 @@ const optionalAuth = (req, res, next) => {
     }
     next();
 };
+
+// 0. Get all locations (Public/Staff)
+router.get('/locations', getLocations);
 
 // 1. Get queue details by token (Public/Patient - No auth required because patients scan QR without login, but can link if logged in)
 router.get('/track/:token', optionalAuth, getQueueByToken);

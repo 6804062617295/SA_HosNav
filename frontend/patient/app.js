@@ -137,23 +137,49 @@ function home() {
     </section>`;
 }
 function search() {
+    const locations = [
+        { id: 14, name: 'Food Court', floor: 1, tag: 'Facility' },
+        { id: 12, name: 'Pharmacy', floor: 1, tag: 'Service' },
+        { id: 13, name: 'Payment', floor: 1, tag: 'Cashier' },
+        { id: 7,  name: 'Treatment Room', floor: 1, tag: 'Treatment' },
+        { id: 8,  name: 'Examination Room 1', floor: 1, tag: 'Clinic' },
+        { id: 9,  name: 'Examination Room 2', floor: 1, tag: 'Clinic' },
+        { id: 10, name: 'Examination Room 3', floor: 1, tag: 'Clinic' },
+        { id: 11, name: 'Examination Room 4', floor: 1, tag: 'Clinic' },
+        { id: 16, name: 'Blood Draw', floor: 2, tag: 'Lab' },
+        { id: 17, name: 'X-ray', floor: 2, tag: 'Imaging' },
+        { id: 15, name: 'Vaccine Clinic', floor: 2, tag: 'Clinic' },
+        { id: 18, name: 'Specialized Waiting Room', floor: 2, tag: 'Waiting' },
+        { id: 19, name: 'ENT', floor: 2, tag: 'Clinic' },
+        { id: 20, name: 'Eye Clinic', floor: 2, tag: 'Clinic' },
+        { id: 21, name: 'Skin Clinic', floor: 2, tag: 'Clinic' },
+        { id: 22, name: 'Dental Clinic', floor: 2, tag: 'Clinic' }
+    ];
+
+    const query = (state.searchQuery || '').toLowerCase();
+    const filtered = locations.filter(l => !query || l.name.toLowerCase().includes(query) || l.tag.toLowerCase().includes(query));
+
     return html`<section class="screen">
         ${topbar("Find a destination")}
-        <div class="search">
-            <input class="input" placeholder="Room, doctor, department..." />
+        <div class="search" style="margin-bottom: 12px;">
+            <input class="input" placeholder="Search room, clinic, service..." value="${state.searchQuery || ''}" oninput="state.searchQuery = this.value; render();" />
         </div>
-        <div class="card">
-            <p class="label">Quick destinations</p>
-            <p class="muted" style="margin-top:10px">
-                Pharmacy · X-Ray · Laboratory · Cardiology
-            </p>
-            <button
-                class="btn secondary"
-                style="margin-top:14px"
-                onclick="go('route')"
-            >
-                Navigate to Cardiology
-            </button>
+        <div class="card" style="padding: 12px;">
+            <p class="label" style="margin-bottom: 10px;">Available Destinations</p>
+            <div style="display:flex; flex-direction:column; gap:8px; max-height: 380px; overflow-y: auto;">
+                ${filtered.map(l => html`
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+                        <div>
+                            <b style="font-size:14px; color:#1e293b; display:block;">${l.name}</b>
+                            <small class="muted">Floor ${l.floor} · ${l.tag}</small>
+                        </div>
+                        <button class="btn secondary" style="padding:6px 12px; font-size:12px;" onclick="loadRouteToLocation(${l.id})">
+                            Navigate
+                        </button>
+                    </div>
+                `).join('')}
+                ${filtered.length === 0 ? '<p class="muted" style="text-align:center; padding:20px;">No matching destinations found</p>' : ''}
+            </div>
         </div>
         ${nav("search")}
     </section>`;
@@ -181,7 +207,9 @@ function queue() {
         </div>
         <div class="card">
             <p class="label">Queue progress</p>
-            ${q.status === 'Waiting' ? '<div class="progress"><i></i></div><p class="muted" style="margin-top:10px">Please wait until your number is called.</p>' : 
+            ${q.status === 'Waiting' ? '<div class="progress"><i></i></div><p style="margin-top:12px; color:#1e293b; font-weight:500; font-size:14px; background:#f1f5f9; padding:10px 12px; border-radius:8px; border-left:4px solid var(--blue);">
+                กรุณาลงทะเบียนให้เสร็จเรียบร้อย แล้วไปนั่งรอเรียกคิวในห้อง <b>General Waiting Room</b> (ชั้น 1)
+            </p>' : 
              q.status === 'Called' ? '<div class="progress" style="background:var(--blue)"></div><b style="color:var(--blue); display:block; margin-top:10px">Please proceed to the counter!</b>' :
              q.status === 'Processing' ? '<b style="color:var(--primary); display:block; margin-top:10px">In consultation</b>' :
              '<b style="display:block; margin-top:10px">Queue finished.</b>'}
@@ -218,6 +246,26 @@ async function pollQueue() {
             if (appEl) appEl.innerHTML = pages[state.page](); // Re-render silently
         }
     } catch(err){}
+}
+
+
+async function loadRouteToLocation(locationId) {
+    try {
+        const fromNode = state.currentNode || 'waiting-room';
+        const res = await fetch(`${API_URL}/api/navigation/route?from_node=${fromNode}&to_location=${locationId}`);
+        const data = await res.json();
+        if (data.success) {
+            state.routeData = data.data;
+            state.routeStep = 0;
+            sessionStorage.setItem('hosnav_routeData', JSON.stringify(data.data));
+            sessionStorage.setItem('hosnav_routeStep', '0');
+            go('map');
+        } else {
+            alert(data.message || 'Could not find a route');
+        }
+    } catch(e) {
+        alert('Connection lost. Please try again.');
+    }
 }
 
 async function loadRoute() {

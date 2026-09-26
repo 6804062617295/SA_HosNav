@@ -1,13 +1,31 @@
 const db = require('../db');
 const crypto = require('crypto');
 
+// 0. Get all locations
+const getLocations = async (req, res) => {
+    try {
+        const result = await db.query('SELECT location_id, name, building, floor FROM locations ORDER BY location_id');
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
+    }
+};
+
 // 1. Create a new Queue (Standard Entry - Staff/Admin only)
 const createQueue = async (req, res) => {
     try {
-        const { destination_id } = req.body;
+        let { destination_id } = req.body;
         
-        if (!destination_id) {
-            return res.status(400).json({ success: false, message: 'destination_id is required' });
+        // --- Fallback for missing or legacy destination_id (e.g. 1) ---
+        if (!destination_id || destination_id === 1 || destination_id === '1') {
+            const defaultLoc = await db.query("SELECT location_id FROM locations WHERE name = 'General Waiting Room' LIMIT 1");
+            if (defaultLoc.rows.length > 0) {
+                destination_id = defaultLoc.rows[0].location_id;
+            } else {
+                const firstLoc = await db.query("SELECT location_id FROM locations ORDER BY location_id LIMIT 1");
+                if (firstLoc.rows.length > 0) destination_id = firstLoc.rows[0].location_id;
+            }
         }
 
         // Generate a unique token for the QR code
@@ -207,6 +225,7 @@ const clearQueues = async (req, res) => {
 };
 
 module.exports = {
+    getLocations,
     createQueue,
     getQueues,
     getQueueByToken,
