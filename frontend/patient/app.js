@@ -207,9 +207,7 @@ function queue() {
         </div>
         <div class="card">
             <p class="label">Queue progress</p>
-            ${q.status === 'Waiting' ? '<div class="progress"><i></i></div><p style="margin-top:12px; color:#1e293b; font-weight:500; font-size:14px; background:#f1f5f9; padding:10px 12px; border-radius:8px; border-left:4px solid var(--blue);">
-                กรุณาลงทะเบียนให้เสร็จเรียบร้อย แล้วไปนั่งรอเรียกคิวในห้อง <b>General Waiting Room</b> (ชั้น 1)
-            </p>' : 
+            ${q.status === 'Waiting' ? '<div class="progress"><i></i></div><p style="margin-top:12px; color:#1e293b; font-weight:500; font-size:14px; background:#f1f5f9; padding:10px 12px; border-radius:8px; border-left:4px solid var(--blue);">กรุณาลงทะเบียนให้เสร็จเรียบร้อย แล้วไปนั่งรอเรียกคิวในห้อง <b>General Waiting Room</b> (ชั้น 1)</p>' : 
              q.status === 'Called' ? '<div class="progress" style="background:var(--blue)"></div><b style="color:var(--blue); display:block; margin-top:10px">Please proceed to the counter!</b>' :
              q.status === 'Processing' ? '<b style="color:var(--primary); display:block; margin-top:10px">In consultation</b>' :
              '<b style="display:block; margin-top:10px">Queue finished.</b>'}
