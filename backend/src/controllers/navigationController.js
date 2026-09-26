@@ -9,6 +9,22 @@ const getRoute = async (req, res) => {
             return res.status(400).json({ success: false, message: 'from_node and either to_node or to_location are required' });
         }
 
+        // Helper to map room node to door node
+        const getDoorNode = async (nodeId) => {
+            const typeRes = await db.query("SELECT type FROM navigation_nodes WHERE node_id = $1", [nodeId]);
+            if (typeRes.rows.length > 0 && typeRes.rows[0].type === 'room') {
+                const doorRes = await db.query(`
+                    SELECT e.to_node as door_id
+                    FROM navigation_edges e
+                    JOIN navigation_nodes n ON e.to_node = n.node_id
+                    WHERE e.from_node = $1 AND n.type = 'door'
+                    LIMIT 1
+                `, [nodeId]);
+                if (doorRes.rows.length > 0) return doorRes.rows[0].door_id;
+            }
+            return nodeId;
+        };
+
         // --- Handle 'waiting-room' keyword: resolve to General Waiting Room node ---
         if (from_node === 'waiting-room' || from_node === '1') {
             const wrRes = await db.query("SELECT n.node_id FROM navigation_nodes n JOIN locations l ON n.location_id = l.location_id WHERE l.name = 'General Waiting Room' LIMIT 1");
@@ -22,6 +38,10 @@ const getRoute = async (req, res) => {
             if (nodeRes.rows.length === 0) return res.status(404).json({ success: false, message: 'Destination node not found for location' });
             to_node = nodeRes.rows[0].node_id;
         }
+
+        // Enforce Door-to-Door navigation
+        from_node = await getDoorNode(from_node);
+        to_node = await getDoorNode(to_node);
 
         const result = await findShortestPath(from_node, to_node);
         if (!result.success) {
