@@ -119,7 +119,7 @@ function renderQRModal() {
         if ($('#qrcode')) {
             $('#qrcode').innerHTML = '';
             new QRCode(document.getElementById("qrcode"), {
-                text: PATIENT_URL + "/frontend/patient/qr-login.html?token=" + state.showQR.token,
+                text: PATIENT_URL + "/qr-login.html?token=" + state.showQR.token,
                 width: 200,
                 height: 200
             });

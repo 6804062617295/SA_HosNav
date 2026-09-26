@@ -46,7 +46,10 @@ CREATE TABLE queue_history (
 CREATE TABLE navigation_nodes (
     node_id SERIAL PRIMARY KEY,
     location_id INTEGER REFERENCES locations(location_id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL -- e.g., 'hallway', 'intersection', 'room', 'entrance'
+    type VARCHAR(50) NOT NULL, -- e.g., 'hallway', 'intersection', 'room', 'entrance'
+    pos_x INTEGER DEFAULT 0,
+    pos_y INTEGER DEFAULT 0,
+    floor INTEGER DEFAULT 1
 );
 
 -- 6. Navigation Edges Table

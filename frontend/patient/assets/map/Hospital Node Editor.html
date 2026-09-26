@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Hospital Node Editor</title>
+<style>
+:root{
+  /* Hospital Navy Theme */
+  --bg:#0b1e2d; --panel:#12314a; --panel2:#1c4568; --line:#2a5a85;
+  --text:#eaf4ff; --sub:#9fb3c8; --accent:#1466d9;
+  --corridor:#9aa7b8; --door:#e8b84b; --room:#1466d9; --vert:#c07be0;
+  --danger:#d64545;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    /* Hospital Light Theme */
+    --bg:#f5f8fb; --panel:#ffffff; --panel2:#eaf4ff; --line:#e6ebf0;
+    --text:#17202b; --sub:#697586; --accent:#1466d9;
+  }
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'DM Sans', sans-serif;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  overflow-x:hidden;
+}
+.app{display:flex; flex-direction:column; height:100vh; height:100%;}
+header{
+  padding:14px 18px; border-bottom:1px solid var(--line); background:var(--panel);
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+}
+header h1{font-size:15px; font-weight:600; margin:0; letter-spacing:.2px;}
+.tabs{display:flex; gap:6px;}
+.tab{
+  padding:6px 14px; border-radius:7px; border:1px solid var(--line); background:transparent;
+  color:var(--sub); cursor:pointer; font-size:13px;
+}
+.tab.active{background:var(--accent); color:#08201d; border-color:var(--accent); font-weight:600;}
+.main{display:flex; flex:1; min-height:0;}
+.canvas-wrap{
+  flex:1; overflow:auto; background:
+    linear-gradient(var(--panel2) 1px, transparent 1px) 0 0/24px 24px,
+    linear-gradient(90deg, var(--panel2) 1px, transparent 1px) 0 0/24px 24px,
+    var(--bg);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+  position:relative;
+}
+#stage{ max-width:100%; max-height:100%; cursor:crosshair; border:1px solid var(--line); border-radius:4px; background:#fff; touch-action:none;}
+.sidebar{
+  width:300px; min-width:260px; border-left:1px solid var(--line); background:var(--panel);
+  display:flex; flex-direction:column; overflow-y:auto;
+}
+.section{padding:14px 16px; border-bottom:1px solid var(--line);}
+.section h2{font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--sub); margin:0 0 10px 0; font-weight:600;}
+.modebtns{display:flex; gap:6px;}
+.modebtn{flex:1; padding:8px 4px; border-radius:7px; border:1px solid var(--line); background:var(--panel2); color:var(--sub); font-size:12px; cursor:pointer;}
+.modebtn.active{background:var(--accent); color:#08201d; border-color:var(--accent); font-weight:600;}
+.typegrid{display:flex; flex-direction:column; gap:6px;}
+.typebtn{
+  display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:7px; border:1px solid var(--line);
+  background:var(--panel2); color:var(--text); font-size:13px; cursor:pointer; text-align:left;
+}
+.typebtn.active{border-color:var(--accent); background:rgba(95,201,192,.12);}
+.swatch{width:13px; height:13px; border-radius:50%; flex-shrink:0; border:1px solid rgba(0,0,0,.25);}
+.hint{font-size:12px; color:var(--sub); line-height:1.5; margin-top:8px;}
+.nodelist{max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:5px;}
+.noderow{
+  display:flex; align-items:center; gap:7px; padding:6px 8px; border-radius:6px; background:var(--panel2);
+  font-size:12px; border:1px solid transparent;
+}
+.noderow.sel{border-color:var(--accent);}
+.noderow .dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+.noderow .lbl{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.noderow input.linkfield{
+  width:38px; font-size:11px; background:var(--bg); color:var(--text); border:1px solid var(--line);
+  border-radius:4px; padding:2px 4px;
+}
+.noderow button{
+  background:none; border:none; color:var(--sub); cursor:pointer; font-size:13px; padding:2px 4px;
+}
+.noderow button:hover{color:var(--danger);}
+.emptymsg{font-size:12px; color:var(--sub); font-style:italic;}
+.stats{display:flex; gap:14px; font-size:12px; color:var(--sub);}
+.stats b{color:var(--text);}
+.actions{display:flex; flex-direction:column; gap:8px;}
+.btn{
+  padding:9px 12px; border-radius:7px; border:1px solid var(--line); background:var(--panel2);
+  color:var(--text); font-size:13px; cursor:pointer; font-weight:500;
+}
+.btn.primary{background:var(--accent); color:#08201d; border-color:var(--accent); font-weight:600;}
+.btn.warn{color:var(--danger); border-color:rgba(224,101,101,.4);}
+footer{padding:8px 16px; border-top:1px solid var(--line); font-size:11px; color:var(--sub); background:var(--panel);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Hospital Node Editor</h1>
+    <div class="tabs" id="floorTabs"></div>
+    <div style="flex:1"></div>
+    <div class="stats" id="statsBar"></div>
+  </header>
+  <div class="main">
+    <div class="canvas-wrap">
+      <svg id="stage" viewBox="0 0 500 500" width="500" height="500"></svg>
+    </div>
+    <div class="sidebar">
+      <div class="section">
+        <h2>Mode</h2>
+        <div class="modebtns">
+          <button class="modebtn active" data-mode="add">+ Add</button>
+          <button class="modebtn" data-mode="connect">Connect</button>
+          <button class="modebtn" data-mode="delete">Delete</button>
+        </div>
+        <div class="hint" id="modeHint"></div>
+      </div>
+      <div class="section" id="typeSection">
+        <h2>Node type</h2>
+        <div class="typegrid" id="typeGrid"></div>
+      </div>
+      <div class="section">
+        <h2>Nodes on this floor</h2>
+        <div class="nodelist" id="nodeList"></div>
+      </div>
+      <div class="section" style="flex:1;">
+        <h2>Export / Data</h2>
+        <div class="actions">
+          <button class="btn primary" id="exportBtn">Export JSON</button>
+          <button class="btn warn" id="clearBtn">Clear this floor</button>
+        </div>
+        <div class="hint">Elevator/Stair nodes: give matching nodes on each floor the same "link" code (e.g. E1) — the export auto-connects them between floors.</div>
+      </div>
+    </div>
+  </div>
+  <footer>Click empty space to place a node (Add mode) · click two nodes to toggle an edge (Connect mode) · click a node or edge to remove it (Delete mode). Work autosaves in this browser.</footer>
+</div>
+
+<script>
+const TYPES = [
+  {id:'corridor', label:'Corridor / junction', color:'var(--corridor)', hex:'#9aa7b8', r:4, shape:'circle'},
+  {id:'door', label:'Door', color:'var(--door)', hex:'#e8b84b', r:4.5, shape:'ring'},
+  {id:'room', label:'Room (destination)', color:'var(--room)', hex:'#5fc9c0', r:5.5, shape:'square'},
+  {id:'vert', label:'Elevator / stair', color:'var(--vert)', hex:'#c07be0', r:6, shape:'diamond'},
+];
+const FLOORS = [
+  {id:'floor1', label:'Floor 1', img: 'floor 1.svg'},
+  {id:'floor2', label:'Floor 2', img: 'floor 2.svg'},
+];
+
+let state = { floor1:{nodes:[],edges:[]}, floor2:{nodes:[],edges:[]} };
+let currentFloor = 'floor1';
+let currentType = 'corridor';
+let currentMode = 'add';
+let pendingConnectNode = null;
+let nextId = 1;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem('hne_state_v1');
+    if(raw){ const parsed = JSON.parse(raw); state = parsed.state; nextId = parsed.nextId||1; }
+  }catch(e){}
+}
+function saveState(){
+  try{ localStorage.setItem('hne_state_v1', JSON.stringify({state, nextId})); }catch(e){}
+}
+loadState();
+
+const svg = document.getElementById('stage');
+const NS = 'http://www.w3.org/2000/svg';
+
+function buildTabs(){
+  const wrap = document.getElementById('floorTabs');
+  wrap.innerHTML = '';
+  FLOORS.forEach(f=>{
+    const b = document.createElement('button');
+    b.className = 'tab' + (f.id===currentFloor?' active':'');
+    b.textContent = f.label;
+    b.onclick = ()=>{ currentFloor=f.id; pendingConnectNode=null; render(); };
+    wrap.appendChild(b);
+  });
+}
+
+function buildTypeGrid(){
+  const wrap = document.getElementById('typeGrid');
+  wrap.innerHTML = '';
+  TYPES.forEach(t=>{
+    const b = document.createElement('button');
+    b.className = 'typebtn' + (t.id===currentType?' active':'');
+    b.innerHTML = '<span class="swatch" style="background:'+t.hex+'"></span><span>'+t.label+'</span>';
+    b.onclick = ()=>{ currentType=t.id; buildTypeGrid(); };
+    wrap.appendChild(b);
+  });
+}
+
+document.querySelectorAll('.modebtn').forEach(b=>{
+  b.onclick = ()=>{
+    currentMode = b.dataset.mode;
+    pendingConnectNode = null;
+    document.querySelectorAll('.modebtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('typeSection').style.display = currentMode==='add' ? 'block' : 'none';
+    updateModeHint();
+    render();
+  };
+});
+function updateModeHint(){
+  const hints = {
+    add: 'Click anywhere on the floor plan to drop a node of the selected type.',
+    connect: 'Click a node, then click a second node to add (or remove) an edge between them.',
+    delete: 'Click a node to delete it and its edges. Click a line to delete just that edge.'
+  };
+  document.getElementById('modeHint').textContent = hints[currentMode];
+}
+
+function typeOf(id){ return TYPES.find(t=>t.id===id); }
+function dat(){ return state[currentFloor]; }
+
+function svgPoint(evt){
+  const rect = svg.getBoundingClientRect();
+  const scaleX = 500 / rect.width;
+  const scaleY = 500 / rect.height;
+  const x = (evt.clientX - rect.left) * scaleX;
+  const y = (evt.clientY - rect.top) * scaleY;
+  return {x: Math.round(x*10)/10, y: Math.round(y*10)/10};
+}
+
+function drawMarker(node){
+  const t = typeOf(node.type);
+  const g = document.createElementNS(NS,'g');
+  g.setAttribute('data-node', node.id);
+  g.style.cursor='pointer';
+  let shape;
+  if(t.shape==='circle'){
+    shape = document.createElementNS(NS,'circle');
+    shape.setAttribute('r', t.r);
+  } else if(t.shape==='ring'){
+    shape = document.createElementNS(NS,'circle');
+    shape.setAttribute('r', t.r);
+    shape.setAttribute('fill','white');
+    shape.setAttribute('stroke-width','2.4');
+  } else if(t.shape==='square'){
+    shape = document.createElementNS(NS,'rect');
+    shape.setAttribute('x', -t.r); shape.setAttribute('y', -t.r);
+    shape.setAttribute('width', t.r*2); shape.setAttribute('height', t.r*2);
+  } else {
+    shape = document.createElementNS(NS,'rect');
+    shape.setAttribute('x', -t.r*0.75); shape.setAttribute('y', -t.r*0.75);
+    shape.setAttribute('width', t.r*1.5); shape.setAttribute('height', t.r*1.5);
+    shape.setAttribute('transform','rotate(45)');
+  }
+  if(t.shape!=='ring'){ shape.setAttribute('fill', t.hex); }
+  shape.setAttribute('stroke','#111'); shape.setAttribute('stroke-width', t.shape==='ring'?2.4:1);
+  if(t.shape==='ring') shape.setAttribute('stroke', t.hex);
+  g.setAttribute('transform', 'translate('+node.x+','+node.y+')');
+  g.appendChild(shape);
+  if(pendingConnectNode===node.id){
+    const halo = document.createElementNS(NS,'circle');
+    halo.setAttribute('r', t.r+5); halo.setAttribute('fill','none');
+    halo.setAttribute('stroke','#2b8cff'); halo.setAttribute('stroke-width','2');
+    halo.setAttribute('stroke-dasharray','3 2');
+    g.insertBefore(halo, shape);
+  }
+  g.addEventListener('click', (e)=>{ e.stopPropagation(); onNodeClick(node.id); });
+  return g;
+}
+
+function onNodeClick(id){
+  if(currentMode==='connect'){
+    if(pendingConnectNode===null){ pendingConnectNode = id; }
+    else if(pendingConnectNode===id){ pendingConnectNode=null; }
+    else {
+      const d = dat();
+      const idx = d.edges.findIndex(e=> (e.from===pendingConnectNode&&e.to===id)||(e.from===id&&e.to===pendingConnectNode));
+      if(idx>=0) d.edges.splice(idx,1);
+      else d.edges.push({from:pendingConnectNode, to:id});
+      pendingConnectNode = null;
+      saveState();
+    }
+    render();
+  } else if(currentMode==='delete'){
+    const d = dat();
+    d.nodes = d.nodes.filter(n=>n.id!==id);
+    d.edges = d.edges.filter(e=>e.from!==id && e.to!==id);
+    saveState();
+    render();
+  }
+}
+
+function onEdgeClick(edge, e){
+  e.stopPropagation();
+  if(currentMode!=='delete') return;
+  const d = dat();
+  d.edges = d.edges.filter(x=>x!==edge);
+  saveState();
+  render();
+}
+
+function stageClick(e){
+  if(currentMode!=='add') return;
+  const p = svgPoint(e);
+  const d = dat();
+  const id = 'n' + (nextId++);
+  const node = {id, type:currentType, x:p.x, y:p.y};
+  if(currentType==='vert') node.link = '';
+  d.nodes.push(node);
+  saveState();
+  render();
+}
+
+function render(){
+  buildTabs();
+  svg.innerHTML = '';
+  const img = document.createElementNS(NS,'image');
+  const floor = FLOORS.find(f=>f.id===currentFloor);
+  img.setAttributeNS('http://www.w3.org/1999/xlink','href', floor.img);
+  img.setAttribute('x',0); img.setAttribute('y',0);
+  img.setAttribute('width',500); img.setAttribute('height',500); img.setAttribute('preserveAspectRatio','none');
+  img.style.pointerEvents='none';
+  svg.appendChild(img);
+
+  const d = dat();
+  const nodeMap = {};
+  d.nodes.forEach(n=>nodeMap[n.id]=n);
+
+  d.edges.forEach(edge=>{
+    const a = nodeMap[edge.from], b = nodeMap[edge.to];
+    if(!a||!b) return;
+    const line = document.createElementNS(NS,'line');
+    line.setAttribute('x1',a.x); line.setAttribute('y1',a.y);
+    line.setAttribute('x2',b.x); line.setAttribute('y2',b.y);
+    line.setAttribute('stroke','#2b8cff'); line.setAttribute('stroke-width','2');
+    line.setAttribute('stroke-linecap','round');
+    line.style.cursor = currentMode==='delete' ? 'pointer' : 'default';
+    line.addEventListener('click',(e)=>onEdgeClick(edge,e));
+    svg.appendChild(line);
+  });
+
+  d.nodes.forEach(n=> svg.appendChild(drawMarker(n)));
+
+  svg.onclick = stageClick;
+  renderSidebarList();
+  renderStats();
+}
+
+function renderSidebarList(){
+  const wrap = document.getElementById('nodeList');
+  const d = dat();
+  wrap.innerHTML = '';
+  if(d.nodes.length===0){
+    wrap.innerHTML = '<div class="emptymsg">No nodes yet on this floor.</div>';
+    return;
+  }
+  d.nodes.forEach(n=>{
+    const t = typeOf(n.type);
+    const row = document.createElement('div');
+    row.className = 'noderow' + (pendingConnectNode===n.id?' sel':'');
+    let extra = '';
+    if(n.type==='vert'){
+      extra = '<input class="linkfield" placeholder="link" value="'+(n.link||'')+'" title="Link code, e.g. E1">';
+    }
+    row.innerHTML = '<span class="dot" style="background:'+t.hex+'"></span>'+
+      '<span class="lbl">'+n.id+' · '+t.label+' ('+n.x+','+n.y+')</span>' + extra +
+      '<button title="Delete">✕</button>';
+    row.querySelector('button').onclick = ()=>{
+      d.nodes = d.nodes.filter(x=>x.id!==n.id);
+      d.edges = d.edges.filter(e=>e.from!==n.id && e.to!==n.id);
+      saveState(); render();
+    };
+    const lf = row.querySelector('.linkfield');
+    if(lf){ lf.onchange = ()=>{ n.link = lf.value.trim(); saveState(); }; }
+    wrap.appendChild(row);
+  });
+}
+
+function renderStats(){
+  const totalNodes = FLOORS.reduce((s,f)=>s+state[f.id].nodes.length,0);
+  const totalEdges = FLOORS.reduce((s,f)=>s+state[f.id].edges.length,0);
+  document.getElementById('statsBar').innerHTML =
+    '<span><b>'+totalNodes+'</b> nodes total</span><span><b>'+totalEdges+'</b> edges total</span>';
+}
+
+document.getElementById('clearBtn').onclick = ()=>{
+  if(!confirm('Clear all nodes and edges on ' + FLOORS.find(f=>f.id===currentFloor).label + '?')) return;
+  state[currentFloor] = {nodes:[],edges:[]};
+  saveState(); render();
+};
+
+async function doExport(){
+  const payload = { floors: FLOORS.map(f=>({ id:f.id, label:f.label, nodes:state[f.id].nodes, edges:state[f.id].edges })), crossFloorEdges: [] };
+  const linkMap = {};
+  payload.floors.forEach(f=>{
+    f.nodes.forEach(n=>{
+      if(n.type==='vert' && n.link){
+        linkMap[n.link] = linkMap[n.link] || [];
+        linkMap[n.link].push({floor:f.id, node:n.id});
+      }
+    });
+  });
+  Object.entries(linkMap).forEach(([link, arr])=>{
+    for(let i=0;i<arr.length;i++){
+      for(let j=i+1;j<arr.length;j++){
+        payload.crossFloorEdges.push({link, from:arr[i], to:arr[j]});
+      }
+    }
+  });
+  const json = JSON.stringify(payload, null, 2);
+  try{
+    const downloads = await claude.use('downloads');
+    if(downloads){
+      await downloads.save({filename:'hospital-nodes.json', data:json});
+      return;
+    }
+  }catch(e){}
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'hospital-nodes.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+document.getElementById('exportBtn').onclick = doExport;
+
+buildTypeGrid();
+updateModeHint();
+render();
+</script>
+</body>
+</html>

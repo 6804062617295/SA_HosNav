@@ -223,7 +223,7 @@ async function pollQueue() {
 async function loadRoute() {
     if (!state.currentQueue) return;
     try {
-        const fromNode = state.currentNode || 1; // Default to 1 (Triage) if not set
+        const fromNode = state.currentNode || 'waiting-room'; // Default to General Waiting Room
         const toLocation = state.currentQueue.destination_id;
         const res = await fetch(`${API_URL}/api/navigation/route?from_node=${fromNode}&to_location=${toLocation}`);
         const data = await res.json();
@@ -311,16 +311,40 @@ function map() {
 
     const step = state.routeData.instructions[state.routeStep];
     const isLast = state.routeStep === state.routeData.instructions.length - 1;
+    
+    // Find current floor based on the "from" node of the current step
+    const stepNode = state.routeData.nodes_info.find(n => n.node_id === step.from);
+    const currentFloor = stepNode ? stepNode.node_floor : 1;
+    const floorImg = currentFloor === 1 ? 'assets/map/floor 1.svg' : 'assets/map/floor 2.svg';
+
+    // Generate polyline points for all nodes in the path that belong to the current floor
+    let polylinePoints = [];
+    let currentX = 0, currentY = 0;
+    
+    for (let id of state.routeData.path) {
+        const n = state.routeData.nodes_info.find(x => x.node_id === id);
+        if (n && n.node_floor == currentFloor) {
+            polylinePoints.push(`${n.pos_x},${n.pos_y}`);
+            if (id === step.from) {
+                currentX = n.pos_x;
+                currentY = n.pos_y;
+            }
+        }
+    }
+    
+    const polylineStr = polylinePoints.join(" ");
 
     return html`<section class="screen">
         ${topbar("Navigation")}
-        <div class="mapbox" style="background: #e0e0e0; display:flex; align-items:center; justify-content:center; flex-direction:column; color:#666;">
-            <!-- Real map UI will go here, currently placeholder -->
-            <i class="ph ph-map-trifold" style="font-size:48px; opacity:0.5; margin-bottom:10px;"></i>
-            <p>Map View Placeholder</p>
-            <small>Walking from Node ${step.from} to Node ${step.to}</small>
+        <div class="mapbox" style="position:relative; background:#fff; overflow:hidden;">
+            <!-- Real map UI with SVG -->
+            <svg viewBox="0 0 500 500" width="100%" height="100%" style="display:block; max-width:500px; margin:0 auto; background:#f4f6fa; border:1px solid #e6ebf0; border-radius:12px;">
+                <image href="${floorImg}" width="500" height="500" preserveAspectRatio="none" />
+                <polyline points="${polylineStr}" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linejoin="round" stroke-dasharray="8 4" opacity="0.8" />
+                <circle cx="${currentX}" cy="${currentY}" r="6" fill="var(--blue)" stroke="#fff" stroke-width="2" />
+            </svg>
         </div>
-        <div class="card instruction">
+        <div class="card instruction" style="margin-top:12px">
             <b>${step.instruction}</b>
             <p class="muted">Distance: ${step.distance}m</p>
         </div>
@@ -328,9 +352,10 @@ function map() {
             <button class="btn secondary" style="flex: 1; padding: 12px 10px; font-size: 14px;" onclick="go('scan')">
                 <i class="ph ph-qr-code"></i> Checkpoint
             </button>
-            <button class="btn primary" style="flex: 1;" onclick="nextStep()">
-                ${isLast ? "Arrive" : "Next step"}
-            </button>
+            ${isLast 
+                ? html`<button class="btn primary" style="flex: 2" onclick="go('complete')">Finish</button>` 
+                : html`<button class="btn primary" style="flex: 2" onclick="state.routeStep++; render();">Next Step</button>`
+            }
         </div>
     </section>`;
 }

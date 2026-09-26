@@ -9,6 +9,14 @@ const getRoute = async (req, res) => {
             return res.status(400).json({ success: false, message: 'from_node and either to_node or to_location are required' });
         }
 
+        // --- Handle 'waiting-room' keyword: resolve to General Waiting Room node ---
+        if (from_node === 'waiting-room' || from_node === '1') {
+            const wrRes = await db.query("SELECT n.node_id FROM navigation_nodes n JOIN locations l ON n.location_id = l.location_id WHERE l.name = 'General Waiting Room' LIMIT 1");
+            if (wrRes.rows.length > 0) {
+                from_node = wrRes.rows[0].node_id;
+            }
+        }
+
         if (to_location && !to_node) {
             const nodeRes = await db.query('SELECT node_id FROM navigation_nodes WHERE location_id = $1 LIMIT 1', [to_location]);
             if (nodeRes.rows.length === 0) return res.status(404).json({ success: false, message: 'Destination node not found for location' });
@@ -22,7 +30,7 @@ const getRoute = async (req, res) => {
 
         // Fetch location names for the nodes
         const nodesData = await db.query(`
-            SELECT n.node_id, l.name, l.building, l.floor 
+            SELECT n.node_id, n.pos_x, n.pos_y, n.floor as node_floor, l.name, l.building, l.floor 
             FROM navigation_nodes n 
             LEFT JOIN locations l ON n.location_id = l.location_id
             WHERE n.node_id = ANY($1::int[])
