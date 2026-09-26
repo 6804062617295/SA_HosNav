@@ -36,12 +36,62 @@ const getRoute = async (req, res) => {
             WHERE n.node_id = ANY($1::int[])
         `, [result.path]);
 
+        const nodesInfo = nodesData.rows;
+        const getNode = id => nodesInfo.find(n => n.node_id === id);
+
+        const rawInst = result.instructions;
+        const mergedInst = [];
+        let currentGroup = null;
+
+        for (let i = 0; i < rawInst.length; i++) {
+            let step = rawInst[i];
+            
+            if (!currentGroup) {
+                currentGroup = { ...step };
+            } else {
+                let n0 = getNode(currentGroup.from);
+                let n1 = getNode(currentGroup.to);
+                let n2 = getNode(step.to);
+
+                let isCollinear = false;
+                if (n0 && n1 && n2 && n0.node_floor === n1.node_floor && n1.node_floor === n2.node_floor) {
+                    let len1 = Math.hypot(n1.pos_x - n0.pos_x, n1.pos_y - n0.pos_y);
+                    let len2 = Math.hypot(n2.pos_x - n1.pos_x, n2.pos_y - n1.pos_y);
+                    
+                    if (len1 > 0 && len2 > 0) {
+                        let dx1 = (n1.pos_x - n0.pos_x) / len1;
+                        let dy1 = (n1.pos_y - n0.pos_y) / len1;
+                        let dx2 = (n2.pos_x - n1.pos_x) / len2;
+                        let dy2 = (n2.pos_y - n1.pos_y) / len2;
+
+                        let cross = dx1 * dy2 - dy1 * dx2;
+                        let dot = dx1 * dx2 + dy1 * dy2;
+
+                        // Same direction if cross product ~ 0 and dot product ~ 1
+                        if (Math.abs(cross) < 0.1 && dot > 0.9) {
+                            isCollinear = true;
+                        }
+                    }
+                }
+
+                if (isCollinear) {
+                    // Merge step
+                    currentGroup.to = step.to;
+                    currentGroup.distance += step.distance;
+                } else {
+                    mergedInst.push(currentGroup);
+                    currentGroup = { ...step };
+                }
+            }
+        }
+        if (currentGroup) mergedInst.push(currentGroup);
+
         res.json({
             success: true,
             data: {
                 path: result.path,
                 nodes_info: nodesData.rows,
-                instructions: result.instructions,
+                instructions: mergedInst,
                 total_distance: result.totalDistance
             }
         });

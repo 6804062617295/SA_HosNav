@@ -78,34 +78,10 @@ async function findShortestPath(startNodeId, endNodeId) {
             }
             path.push(parseInt(startNodeId));
             
-            rawInstructions.reverse();
-            path.reverse();
-
-            // Merge consecutive steps with the SAME instruction (e.g., straight line)
-            const mergedInstructions = [];
-            let currentStep = null;
-
-            for (let i = 0; i < rawInstructions.length; i++) {
-                let rStep = rawInstructions[i];
-                if (!currentStep) {
-                    currentStep = { ...rStep };
-                } else if (currentStep.instruction === rStep.instruction) {
-                    // Merge!
-                    currentStep.to = rStep.to;
-                    currentStep.distance += rStep.distance;
-                } else {
-                    mergedInstructions.push(currentStep);
-                    currentStep = { ...rStep };
-                }
-            }
-            if (currentStep) {
-                mergedInstructions.push(currentStep);
-            }
-
             return {
                 success: true,
-                path: path,
-                instructions: mergedInstructions,
+                path: path.reverse(),
+                instructions: rawInstructions.reverse(),
                 totalDistance: totalDistance
             };
         }
