@@ -31,6 +31,10 @@ const go = (p) => {
         complete: "complete.html",
     }[p];
 };
+window.render = () => {
+    const el = document.getElementById("app");
+    if (el) el.innerHTML = pages[state.page]();
+};
 const nav = (a) =>
     `<nav class="nav">${[
         ["home", "ph-house", "Home"],
@@ -400,7 +404,7 @@ function map() {
             </button>
             ${isLast 
                 ? html`<button class="btn primary" style="flex: 2" onclick="go('complete')">Finish</button>` 
-                : html`<button class="btn primary" style="flex: 2" onclick="state.routeStep++; render();">Next Step</button>`
+                : html`<button class="btn primary" style="flex: 2" onclick="nextStep()">Next Step</button>`
             }
         </div>
     </section>`;
