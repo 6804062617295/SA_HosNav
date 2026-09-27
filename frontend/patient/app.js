@@ -9,9 +9,9 @@ const state = {
     sos: false,
     queueToken: new URLSearchParams(window.location.search).get('token') || localStorage.getItem('queueToken'),
     currentQueue: null,
-    routeData: JSON.parse(sessionStorage.getItem('hosnav_routeData') || 'null'),
-    routeStep: parseInt(sessionStorage.getItem('hosnav_routeStep') || '0'),
-    currentNode: parseInt(sessionStorage.getItem('hosnav_currentNode') || '1')
+    routeData: JSON.parse(localStorage.getItem('hosnav_routeData') || 'null'),
+    routeStep: parseInt(localStorage.getItem('hosnav_routeStep') || '0'),
+    currentNode: parseInt(localStorage.getItem('hosnav_currentNode') || '1')
 };
 
 const html = String.raw;
@@ -26,6 +26,7 @@ const go = (p) => {
         route: "route.html",
         map: "map.html",
         qrlogin: "qr-login.html",
+        scan: "scan.html",
         notifications: "notifications.html",
         profile: "profile.html",
         complete: "complete.html",
@@ -92,6 +93,14 @@ function home() {
     
     return html`<section class="screen">
         ${topbar("Home")}
+
+        <div style="background: #eaf4ff; color: #1466d9; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-weight: 600;">
+            <i class="ph ph-map-pin" style="font-size: 24px;"></i>
+            <div>
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8;">Current Location</div>
+                <div style="font-size: 15px;">${localStorage.getItem('hosnav_currentLocationName') || 'Scan Queue or Checkpoint QR'}</div>
+            </div>
+        </div>
         
         <div class="card appointment">
             <p class="label">${hasQueue ? "Destination" : "Welcome"}</p>
@@ -211,7 +220,7 @@ function queue() {
         </div>
         <div class="card">
             <p class="label">Queue progress</p>
-            ${q.status === 'Waiting' ? '<div class="progress"><i></i></div><p style="margin-top:12px; color:#1e293b; font-weight:500; font-size:14px; background:#f1f5f9; padding:10px 12px; border-radius:8px; border-left:4px solid var(--blue);">กรุณาลงทะเบียนให้เสร็จเรียบร้อย แล้วไปนั่งรอเรียกคิวในห้อง <b>General Waiting Room</b> (ชั้น 1)</p>' : 
+            ${q.status === 'Waiting' ? '<div class="progress"><i></i></div><p style="margin-top:12px; color:#1e293b; font-weight:500; font-size:14px; background:#f1f5f9; padding:10px 12px; border-radius:8px; border-left:4px solid var(--blue);">Please complete your registration and wait to be called in the <b>General Waiting Room</b> (Floor 1).</p>' : 
              q.status === 'Called' ? '<div class="progress" style="background:var(--blue)"></div><b style="color:var(--blue); display:block; margin-top:10px">Please proceed to the counter!</b>' :
              q.status === 'Processing' ? '<b style="color:var(--primary); display:block; margin-top:10px">In consultation</b>' :
              '<b style="display:block; margin-top:10px">Queue finished.</b>'}
@@ -220,35 +229,6 @@ function queue() {
     </section>`;
 }
 
-async function pollQueue() {
-    if(!state.queueToken) return;
-    try {
-        const res = await fetch(`${API_URL}/api/queues/track/${state.queueToken}`);
-        const data = await res.json();
-        if(data.success) {
-            // Check if status changed
-            if(state.currentQueue && state.currentQueue.status !== data.data.status) {
-                // Save notification
-                let notis = [];
-                try { notis = JSON.parse(localStorage.getItem('hosnav_notis')) || []; } catch(e){}
-                notis.unshift({
-                    title: `Queue Status: ${data.data.status}`,
-                    message: `Your queue is now ${data.data.status}. Destination: ${data.data.destination_name}`,
-                    time: new Date().toISOString(),
-                    type: data.data.status === 'Called' ? 'alert' : 'info'
-                });
-                localStorage.setItem('hosnav_notis', JSON.stringify(notis));
-
-                if(data.data.status === 'Called') {
-                    alert('It is your turn! Please go to ' + data.data.destination_name);
-                }
-            }
-            state.currentQueue = data.data;
-            const appEl = document.getElementById("app");
-            if (appEl) appEl.innerHTML = pages[state.page](); // Re-render silently
-        }
-    } catch(err){}
-}
 
 
 async function loadRouteToLocation(locationId) {
@@ -259,8 +239,8 @@ async function loadRouteToLocation(locationId) {
         if (data.success) {
             state.routeData = data.data;
             state.routeStep = 0;
-            sessionStorage.setItem('hosnav_routeData', JSON.stringify(data.data));
-            sessionStorage.setItem('hosnav_routeStep', '0');
+            localStorage.setItem('hosnav_routeData', JSON.stringify(data.data));
+            localStorage.setItem('hosnav_routeStep', '0');
             go('map');
         } else {
             alert(data.message || 'Could not find a route');
@@ -280,10 +260,10 @@ async function loadRoute() {
         if (data.success) {
             state.routeData = data.data;
             state.routeStep = 0;
-            sessionStorage.setItem('hosnav_routeData', JSON.stringify(data.data));
-            sessionStorage.setItem('hosnav_routeStep', '0');
+            localStorage.setItem('hosnav_routeData', JSON.stringify(data.data));
+            localStorage.setItem('hosnav_routeStep', '0');
             const appEl = document.getElementById("app");
-            if (appEl) appEl.innerHTML = pages[state.page]();
+            if (appEl && !["qrlogin", "scan", "map"].includes(state.page)) appEl.innerHTML = pages[state.page]();
         } else {
             alert(data.message || 'Could not find a route');
         }
@@ -308,7 +288,7 @@ function route() {
         ${topbar("Route preview")}
         <div class="card">
             <p class="label">From</p>
-            <b>Current Location (Node ${state.routeData.path[0]})</b>
+            <b>${(state.routeData.nodes_info.find(n => n.node_id === state.routeData.path[0]) || {}).name || localStorage.getItem('hosnav_currentLocationName') || 'Current Location'}</b>
             <p class="muted" style="margin:12px 0">↓</p>
             <p class="label">To</p>
             <b>${destNode ? destNode.name : state.currentQueue.destination_name}</b>
@@ -332,17 +312,17 @@ function route() {
 function nextStep() {
     if (state.routeData && state.routeStep < state.routeData.instructions.length - 1) {
         state.routeStep++;
-        sessionStorage.setItem('hosnav_routeStep', state.routeStep.toString());
+        localStorage.setItem('hosnav_routeStep', state.routeStep.toString());
         if (window.render) window.render();
     } else {
         // Arrival: update current node
         if (state.routeData && state.routeData.instructions.length > 0) {
             const lastInst = state.routeData.instructions[state.routeData.instructions.length - 1];
             state.currentNode = lastInst.to;
-            sessionStorage.setItem('hosnav_currentNode', state.currentNode.toString());
+            localStorage.setItem('hosnav_currentNode', state.currentNode.toString()); const dNode = state.routeData.nodes_info.find(n => n.node_id === lastInst.to); if(dNode) localStorage.setItem('hosnav_currentLocationName', (dNode.name || 'Door ' + dNode.node_id) + ' (Floor ' + dNode.node_floor + ')');
         }
-        sessionStorage.removeItem('hosnav_routeData');
-        sessionStorage.removeItem('hosnav_routeStep');
+        localStorage.removeItem('hosnav_routeData');
+        localStorage.removeItem('hosnav_routeStep');
         state.routeData = null;
         state.routeStep = 0;
         go('complete');
@@ -456,7 +436,7 @@ function map() {
 function qrlogin() {
     return html`<section class="screen login center">
         ${topbar("")}
-        <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; margin-top: 20px;"></div>
+        <div id="reader" style="width: 100%; min-height: 250px; background: #eee; border-radius: 12px; overflow: hidden; margin-top: 20px;"></div>
         <h2 style="margin-top:20px;">Scan your appointment QR</h2>
         <p class="muted">
             Access your queue and navigation without an account.
@@ -468,55 +448,15 @@ function qrlogin() {
     </section>`;
 }
 
-async function handleQRScan(token, silent = false) {
-    if(!token) return;
-    try {
-        const headers = {};
-        const userToken = localStorage.getItem('hosnav_token');
-        if (userToken) {
-            headers['Authorization'] = `Bearer ${userToken}`;
-        }
-        const res = await fetch(`${API_URL}/api/queues/track/${token}`, { headers });
-        if (!res.ok && res.status !== 404) throw new Error('Network response was not ok');
-        const data = await res.json();
-        
-        if(data.success) {
-            localStorage.setItem('queueToken', token);
-            state.queueToken = token;
-            state.currentQueue = data.data;
-            if(!silent && state.page !== 'queue') {
-                go('queue');
-            } else {
-                // Re-render immediately on all pages to ensure data is fresh
-                const appEl = document.getElementById("app");
-                if (appEl) appEl.innerHTML = pages[state.page]();
-            }
-        } else {
-            if(!silent) alert('QR code is incorrect or expired');
-            localStorage.removeItem('queueToken');
-            state.queueToken = null;
-        }
-    } catch(err) {
-        if(!silent) alert('Connection lost');
-        // If it's a hard network error on load, we don't necessarily wipe the token, it might just be bad signal
-    }
-}
 function scan() {
     return html`<section class="screen center">
         ${topbar("Scan Checkpoint QR")}
-        <div class="qrbox" style="margin-bottom: 20px;">[ Camera View ]</div>
+        <div id="reader" style="width: 100%; max-width: 300px; min-height: 250px; background: #eee; border-radius: 12px; overflow: hidden; margin: 0 auto 20px;"></div>
         <h2>Lost your way?</h2>
         <p class="muted">
             Scan a nearby QR checkpoint to update your location and recalculate the route.
         </p>
-        <button
-            class="btn primary"
-            style="margin-top:25px"
-            onclick="alert('Mock: Scanned QR Checkpoint. Location updated.'); go('map');"
-        >
-            Simulate Checkpoint Scan
-        </button>
-        <button class="btn ghost" style="margin-top:10px" onclick="go('map')">Cancel</button>
+        <button class="btn ghost" style="margin-top:10px" onclick="if(window.checkpointQrCode) window.checkpointQrCode.stop().then(()=>go('home')).catch(()=>go('home')); else go('home');">Cancel</button>
     </section>`;
 }
 function notifications() {
@@ -605,44 +545,186 @@ const pages = {
 };
 $("#app").innerHTML = pages[state.page]();
 
-if (state.page === 'qrlogin') {
+function startRobustCamera(onSuccess) {
+    const readerEl = document.getElementById('reader');
+    if (readerEl) readerEl.innerHTML = ''; // Force clear any ghost UI
+
     setTimeout(() => {
-        window.html5QrCode = new Html5Qrcode("reader");
-        window.html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: {width: 250, height: 250} },
-            (decodedText) => {
-                let token = decodedText;
-                if (decodedText.includes('token=')) {
-                    token = decodedText.split('token=')[1];
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                let cameraId = devices.length > 1 ? devices[devices.length - 1].id : devices[0].id;
+                if(window._activeQr) {
+                    try { window._activeQr.stop(); } catch(e){}
                 }
-                $('#token-input').value = token;
-                
-                // Stop scanning after success to save battery
-                window.html5QrCode.stop().then(() => {
-                    handleQRScan(token);
-                }).catch(err => {
-                    handleQRScan(token);
+                window._activeQr = new Html5Qrcode("reader");
+                window._activeQr.start(cameraId, { fps: 2, qrbox: {width: 250, height: 250} }, (decodedText) => {
+                    window._activeQr.stop().then(() => onSuccess(decodedText)).catch(() => onSuccess(decodedText));
+                }, undefined).catch(err => {
+                    // Fallback to environment facingMode if ID fails
+                    window._activeQr.start({ facingMode: "environment" }, { fps: 2, qrbox: {width: 250, height: 250} }, (text) => {
+                        window._activeQr.stop().then(() => onSuccess(text)).catch(() => onSuccess(text));
+                    }, undefined).catch(err2 => alert("Camera start failed: " + err2));
                 });
-            },
-            (errorMessage) => {
-                // ignore errors
+            } else {
+                alert("No cameras found on your device.");
             }
-        ).catch((err) => {
-            console.error("Camera start failed", err);
+        }).catch(err => {
+            alert("Camera permission error: " + err);
         });
-    }, 100);
+    }, 300);
 }
 
-// Queue Polling
+if (state.page === 'qrlogin') {
+    startRobustCamera((decodedText) => {
+        let token = decodedText;
+        if(token.includes('token=')) {
+            token = token.split('token=')[1].split('&')[0];
+        }
+        const tokenInput = document.getElementById('token-input');
+        if (tokenInput) tokenInput.value = token;
+        handleQRScan(token);
+    });
+}
+
+if (state.page === 'scan') {
+    startRobustCamera((decodedText) => {
+        handleCheckpointScan(decodedText);
+    });
+}
+
+async function handleCheckpointScan(code) {
+    try {
+        const res = await fetch(`${API_URL}/api/navigation/checkpoint/${encodeURIComponent(code)}`);
+        const data = await res.json();
+        if (data.success) {
+            state.currentNode = data.data.node_id;
+            localStorage.setItem('hosnav_currentNode', state.currentNode.toString());
+            localStorage.setItem('hosnav_currentLocationName', `${data.data.location_name} (Floor ${data.data.floor})`);
+            
+            alert(`Location updated: ${data.data.location_name}`);
+            
+            if (state.routeData && state.routeData.path && state.routeData.path.length > 0) {
+                const destId = state.routeData.path[state.routeData.path.length - 1];
+                const rRes = await fetch(`${API_URL}/api/navigation/route?from_node=${state.currentNode}&to_node=${destId}`);
+                const rData = await rRes.json();
+                if (rData.success) {
+                    state.routeData = rData.data;
+                    state.routeStep = 0;
+                    localStorage.setItem('hosnav_routeData', JSON.stringify(rData.data));
+                    localStorage.setItem('hosnav_routeStep', '0');
+                    go('map');
+                    return;
+                }
+            }
+            go('home');
+        } else {
+            alert('Invalid Checkpoint QR');
+            go('home');
+        }
+    } catch (e) {
+        alert('Connection error');
+        go('home');
+    }
+}
+
 setInterval(pollQueue, 5000);
 
+async function pollQueue() {
+    if(!state.queueToken) return;
+    try {
+        const res = await fetch(`${API_URL}/api/queues/track/${state.queueToken}`);
+        const data = await res.json();
+        if(data.success) {
+            if (data.data.status === 'Completed' || data.data.status === 'Skipped') {
+                alert('Your queue has been ' + data.data.status.toLowerCase() + '. Thank you!');
+                localStorage.removeItem('queueToken');
+                localStorage.removeItem('hosnav_currentNode');
+                localStorage.removeItem('hosnav_currentLocationName');
+                state.queueToken = null;
+                state.currentQueue = null;
+                go('home');
+                return;
+            }
+            if(state.currentQueue && state.currentQueue.status !== data.data.status) {
+                let notis = [];
+                try { notis = JSON.parse(localStorage.getItem('hosnav_notis')) || []; } catch(e){}
+                notis.unshift({
+                    title: `Queue Status: ${data.data.status}`,
+                    message: `Your queue is now ${data.data.status}. Destination: ${data.data.destination_name}`,
+                    time: new Date().toISOString(),
+                    type: data.data.status === 'Called' ? 'alert' : 'info'
+                });
+                localStorage.setItem('hosnav_notis', JSON.stringify(notis));
+
+                if(data.data.status === 'Called') {
+                    alert('It is your turn! Please go to ' + data.data.destination_name);
+                }
+            }
+            state.currentQueue = data.data;
+            const appEl = document.getElementById("app");
+            if (appEl && !["qrlogin", "scan", "map"].includes(state.page)) appEl.innerHTML = pages[state.page](); 
+        }
+    } catch(err){}
+}
+
+async function handleQRScan(token, silent = false) {
+    if(!token) return;
+    try {
+        const headers = {};
+        const userToken = localStorage.getItem('hosnav_token');
+        if (userToken) {
+            headers['Authorization'] = `Bearer ${userToken}`;
+        }
+        const res = await fetch(`${API_URL}/api/queues/track/${token}`, { headers });
+        if (!res.ok && res.status !== 404) throw new Error('Network response was not ok');
+        const data = await res.json();
+        
+        if(data.success) {
+            if (data.data.status === 'Completed' || data.data.status === 'Skipped') {
+                if (!silent) alert('This queue has already ended.');
+                localStorage.removeItem('queueToken');
+                localStorage.removeItem('hosnav_currentNode');
+                localStorage.removeItem('hosnav_currentLocationName');
+                state.queueToken = null;
+                state.currentQueue = null;
+                return;
+            }
+            
+            const oldToken = localStorage.getItem('queueToken');
+            
+            localStorage.setItem('queueToken', token);
+            state.queueToken = token;
+            state.currentQueue = data.data;
+            
+            // Force location reset ONLY if joining a completely NEW queue
+            if (oldToken !== token || !localStorage.getItem('hosnav_currentNode')) {
+                localStorage.setItem('hosnav_currentNode', '76');
+                localStorage.setItem('hosnav_currentLocationName', 'General Waiting Room (Floor 1)');
+                state.currentNode = 76;
+            }
+            
+            if(!silent && state.page !== 'queue') {
+                go('queue');
+            } else {
+                const appEl = document.getElementById("app");
+                if (appEl && !["qrlogin", "scan", "map"].includes(state.page)) appEl.innerHTML = pages[state.page]();
+            }
+        } else {
+            if(!silent) alert('QR code is incorrect or expired');
+            localStorage.removeItem('queueToken');
+                localStorage.removeItem('hosnav_currentNode');
+                localStorage.removeItem('hosnav_currentLocationName');
+                state.queueToken = null;
+        }
+    } catch(err) {
+        if(!silent) alert('Connection lost');
+    }
+}
+
 async function syncActiveQueue() {
-    // If they have a token in URL or localStorage, track it
     if(state.queueToken) {
         await handleQRScan(state.queueToken, true).catch(()=>null);
     }
-    // If they are logged in but don't have a queueToken, check backend
     else if(localStorage.getItem('hosnav_token')) {
         try {
             const res = await fetch(`${API_URL}/api/queues/my-active`, {
@@ -656,7 +738,6 @@ async function syncActiveQueue() {
     }
 }
 syncActiveQueue();
-
 
 async function handleAuth(isRegister) {
     const email = document.getElementById('auth-email').value;
@@ -691,7 +772,6 @@ async function handleAuth(isRegister) {
                 alert('Account created successfully!');
                 go('login');
             } else {
-                // Save token and user info
                 localStorage.setItem('hosnav_token', result.token);
                 localStorage.setItem('hosnav_user', JSON.stringify(result.user));
                 alert('Welcome, ' + result.user.name);
@@ -704,6 +784,5 @@ async function handleAuth(isRegister) {
     } catch (err) {
         errorEl.textContent = 'Connection lost. Please try again.';
         errorEl.style.display = 'block';
-        console.error(err);
     }
 }

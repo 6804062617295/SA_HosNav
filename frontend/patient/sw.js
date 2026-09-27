@@ -1,10 +1,14 @@
-const CACHE_NAME = 'hosnav-pwa-v22';
+const CACHE_NAME = 'hosnav-pwa-v37';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './app.js',
     './styles.css',
-    './assets/Rlogo.png'
+    './assets/Rlogo.png',
+    './scan.html',
+    './qr-login.html',
+    './map.html',
+    './queue.html'
     
 ];
 

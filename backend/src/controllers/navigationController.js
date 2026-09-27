@@ -50,10 +50,17 @@ const getRoute = async (req, res) => {
 
         // Fetch location names for the nodes
         const nodesData = await db.query(`
-            SELECT n.node_id, n.pos_x, n.pos_y, n.floor as node_floor, l.name, l.building, l.floor 
+            SELECT n.node_id, n.pos_x, n.pos_y, n.floor as node_floor, n.type, l.name, l.building, l.floor,
+            (SELECT l2.name FROM navigation_edges e 
+             JOIN navigation_nodes n2 ON e.to_node = n2.node_id 
+             JOIN locations l2 ON n2.location_id = l2.location_id 
+             WHERE e.from_node = n.node_id AND n2.type = 'room' LIMIT 1) as connected_room_name
             FROM navigation_nodes n 
             LEFT JOIN locations l ON n.location_id = l.location_id
             WHERE n.node_id = ANY($1::int[])
+
+
+
         `, [result.path]);
 
         const nodesInfo = nodesData.rows;
@@ -110,7 +117,7 @@ const getRoute = async (req, res) => {
             success: true,
             data: {
                 path: result.path,
-                nodes_info: nodesData.rows,
+                nodes_info: nodesData.rows.map(r => ({ ...r, name: r.name || r.connected_room_name || (r.type === 'vert' ? 'Elevator/Stairs' : 'Location ' + r.node_id) })),
                 instructions: mergedInst,
                 total_distance: result.totalDistance
             }
@@ -128,7 +135,11 @@ const getCheckpoint = async (req, res) => {
     try {
         const { code } = req.params;
         const result = await db.query(`
-            SELECT c.qr_id, c.code_hash, n.node_id, l.name as location_name, l.building, l.floor
+            SELECT c.qr_id, c.code_hash, n.node_id, n.type, l.name as location_name, l.building, n.floor,
+            (SELECT l2.name FROM navigation_edges e 
+             JOIN navigation_nodes n2 ON e.to_node = n2.node_id 
+             JOIN locations l2 ON n2.location_id = l2.location_id 
+             WHERE e.from_node = n.node_id AND n2.type = 'room' LIMIT 1) as connected_room_name
             FROM qr_checkpoints c
             JOIN navigation_nodes n ON c.node_id = n.node_id
             LEFT JOIN locations l ON n.location_id = l.location_id
@@ -139,11 +150,41 @@ const getCheckpoint = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Invalid checkpoint QR code' });
         }
 
-        res.json({ success: true, data: result.rows[0] });
+        const r = result.rows[0];
+        r.location_name = r.location_name || r.connected_room_name || (r.type === 'vert' ? 'Elevator/Stairs' : 'Location ' + r.node_id);
+        res.json({ success: true, data: r });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ success: false, message: 'System error. Please try again later.' });
     }
 };
 
-module.exports = { getRoute, getCheckpoint };
+// GET /api/navigation/checkpoints
+const getAllCheckpoints = async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT c.qr_id, c.code_hash, c.node_id, n.type, l.name as location_name, n.floor,
+            (SELECT l2.name FROM navigation_edges e 
+             JOIN navigation_nodes n2 ON e.to_node = n2.node_id 
+             JOIN locations l2 ON n2.location_id = l2.location_id 
+             WHERE e.from_node = n.node_id AND n2.type = 'room' LIMIT 1) as connected_room_name
+            FROM qr_checkpoints c
+            JOIN navigation_nodes n ON c.node_id = n.node_id
+            LEFT JOIN locations l ON n.location_id = l.location_id
+            ORDER BY n.floor ASC, l.name ASC
+        `);
+        
+        // Let's fallback name for Elevator/Stairs
+        const formatted = result.rows.map(r => ({
+            ...r,
+            location_name: r.location_name || r.connected_room_name || (r.type === 'vert' ? 'Elevator/Stairs (Floor ' + r.floor + ')' : 'Door ' + r.node_id)
+        }));
+
+        res.json({ success: true, data: formatted });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ success: false, message: 'System error. Please try again later.' });
+    }
+};
+
+module.exports = { getRoute, getCheckpoint, getAllCheckpoints };

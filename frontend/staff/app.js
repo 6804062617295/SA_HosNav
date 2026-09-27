@@ -7,6 +7,10 @@ const state = {
     patients: [],
     locations: [],
     showQR: null
+,
+    currentTab: 'queue',
+    checkpoints: [],
+    showCheckpointQR: null
 };
 
 const $ = (s) => document.querySelector(s);
@@ -20,6 +24,17 @@ function notify(t) {
     }, 3000);
 }
 
+
+async function fetchCheckpoints() {
+    try {
+        const res = await fetch(`${API_URL}/api/navigation/checkpoints`);
+        const data = await res.json();
+        if (data.success) {
+            state.checkpoints = data.data;
+            if (state.logged && state.currentTab === 'checkpoints') render();
+        }
+    } catch(e) { console.error(e); }
+}
 
 async function fetchLocations() {
     try {
@@ -43,7 +58,7 @@ async function fetchQueues() {
         const data = await res.json();
         if (data.success) {
             state.patients = data.data;
-            // อย่าเพิ่งวาดจอใหม่ถ้ารูป QR ยังโชว์อยู่ (กัน QR กระพริบ)
+            // Do not re-render if QR is showing (prevent flickering)
             if (!state.showQR) {
                 render();
             }
@@ -92,6 +107,7 @@ async function handleLogin() {
             state.logged = true;
             fetchQueues();
             fetchLocations();
+fetchCheckpoints();
             startPolling();
         } else {
             notify(data.message || 'Email or password incorrect');
@@ -176,6 +192,52 @@ function login() {
     `;
 }
 
+function renderCheckpointQRModal() {
+    if(!state.showCheckpointQR) return '';
+    const cp = state.checkpoints.find(c => c.code_hash === state.showCheckpointQR);
+    if(!cp) return '';
+    return `
+        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:999;" onclick="state.showCheckpointQR = null; render();">
+            <div style="background:#fff; padding:30px; border-radius:12px; text-align:center; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);" onclick="event.stopPropagation()">
+                <h2>${cp.location_name}</h2>
+                <p class="muted">Print and place this QR code at the door.</p>
+                <div style="background:white; padding:20px; display:inline-block; margin:20px 0; border-radius:12px;">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(cp.code_hash)}" alt="QR Code">
+                </div>
+                <button class="btn secondary" style="width: 100%;" onclick="state.showCheckpointQR = null; render();">Close</button>
+            </div>
+        </div>
+    `;
+}
+
+function renderCheckpointsTab() {
+    if (!state.checkpoints || state.checkpoints.length === 0) fetchCheckpoints();
+    if (!state.checkpoints || state.checkpoints.length === 0) fetchCheckpoints();
+    const rows = state.checkpoints.map(cp => `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div>
+                <h3 style="margin:0 0 4px 0;">${cp.location_name}</h3>
+                <small class="muted">Floor ${cp.floor}</small>
+            </div>
+            <button class="btn secondary" onclick="state.showCheckpointQR = '${cp.code_hash}'; render();">
+                <i class="ph ph-qr-code"></i> Show QR
+            </button>
+        </div>
+    `).join('');
+
+    return `
+        <div class="top">
+            <div>
+                <h1>QR Checkpoints</h1>
+                <p class="muted">Manage navigation checkpoints for all doors and elevators.</p>
+            </div>
+        </div>
+        <div style="max-width: 800px;">
+            ${rows || '<p>No checkpoints found.</p>'}
+        </div>
+    `;
+}
+
 function dashboard() {
     let rows = state.patients
         .map(
@@ -200,24 +262,11 @@ function dashboard() {
         
     if(rows === '') rows = '<tr><td colspan="4" style="text-align:center;padding:20px;">No queues in system</td></tr>';
 
-    return `
-        <section class="dashboard">
-            <aside class="sidebar">
-                <div class="brand">Hospital<span>Nav</span></div>
-                <p class="portal-sub">Staff portal</p>
-                <button class="side-link active"><i class="ph ph-users-three"></i> Queue management</button>
-                <button class="side-link"><i class="ph ph-chart-bar"></i> Workload insights</button>
-                <button class="side-link"><i class="ph ph-gear"></i> Settings</button>
-                <div class="staff">
-                    <div class="avatar"><i class="ph ph-user"></i></div>
-                    <div>
-                        <b style="cursor:pointer;" onclick="handleLogout()">Log Out</b>
-                        <small>Staff/Admin</small>
-                    </div>
-                </div>
-            </aside>
+    
+    let mainContent = state.currentTab === 'queue' ? `
+            
 
-            <main class="main">
+             
                 <div class="top">
                     <div>
                         <h1>Queue management</h1>
@@ -265,8 +314,8 @@ function dashboard() {
 
                     <div>
                         <div class="card">
-                            <p class="label">สร้าง QR รับคิวใหม่</p>
-                            <p class="muted" style="margin-bottom: 12px;">แจก QR Code คิวสำหรับผู้ป่วยใหม่</p>
+                            <p class="label">Generate Queue</p>
+                            <p class="muted" style="margin-bottom: 12px;">Provide a QR Code for a new patient entry.</p>
                             <button class="btn primary" style="width: 100%;" onclick="createQueue()">Generate Queue QR</button>
                         </div>
                         <br>
@@ -303,14 +352,36 @@ function dashboard() {
                     </div>
                 </div>
             </main>
-        </section>
-        
-        <div style="position:fixed; bottom:10px; right:15px; z-index:100;">
+        ` : renderCheckpointsTab();
+    
+    return `
+        <section class="dashboard">
+            <aside class="sidebar">
+                <div class="brand">Hospital<span>Nav</span></div>
+                <p class="portal-sub">Staff portal</p>
+                <button class="side-link ${state.currentTab === 'queue' ? 'active' : ''}" onclick="state.currentTab='queue'; render();"><i class="ph ph-users-three"></i> Queue management</button>
+                <button class="side-link ${state.currentTab === 'checkpoints' ? 'active' : ''}" onclick="state.currentTab='checkpoints'; render();"><i class="ph ph-qr-code"></i> QR Checkpoints</button>
+                <button class="side-link"><i class="ph ph-chart-bar"></i> Workload insights</button>
+                <button class="side-link"><i class="ph ph-gear"></i> Settings</button>
+                <div class="staff">
+                    <div class="avatar"><i class="ph ph-user"></i></div>
+                    <div>
+                        <b style="cursor:pointer;" onclick="handleLogout()">Log Out</b>
+                        <small>Staff/Admin</small>
+                    </div>
+                </div>
+            </aside>
+             
+            <main class="main">
+                ${mainContent}
+            </main>
+        </section>        <div style="position:fixed; bottom:10px; right:15px; z-index:100;">
             <button onclick="clearAllQueues()" style="background:none; border:none; color:#ccc; font-size:12px; cursor:pointer;">[Clear All Queues]</button>
         </div>
 
-        ${state.toast ? `<div class="toast"><i class="ph ph-check-circle"></i> ${state.toast}</div>` : ''}
-        ${state.showQR ? renderQRModal() : ''}
+        ${state.toast ? `<div class="toast"><i class="ph ph-check-circle"></i> ${state.toast}</div>` : ""}
+        ${state.showQR ? renderQRModal() : ""}
+        ${state.showCheckpointQR ? renderCheckpointQRModal() : ''}
     `;
 }
 
@@ -371,7 +442,9 @@ function render() {
 
 function startPolling() {
     if(window.pollingInterval) clearInterval(window.pollingInterval);
-    window.pollingInterval = setInterval(fetchQueues, 5000);
+    window.pollingInterval = setInterval(() => {
+        if(state.currentTab === 'queue') fetchQueues();
+    }, 5000);
 }
 
 render();
