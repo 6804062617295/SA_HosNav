@@ -219,6 +219,10 @@ h2 {
     cursor: pointer;
     color: var(--navy);
     font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
 }
 
 .header-row {

@@ -14,6 +14,15 @@ const state = {
     currentNode: parseInt(localStorage.getItem('hosnav_currentNode') || '1')
 };
 
+// Global Auth Guard: Kick out unauthorized users
+const protectedPages = ['home', 'search', 'queue', 'route', 'map', 'scan', 'notifications', 'profile', 'complete'];
+if (protectedPages.includes(state.page)) {
+    const hasAccess = !!(localStorage.getItem('queueToken') || localStorage.getItem('hosnav_token'));
+    if (!hasAccess) {
+        window.location.href = 'qr-login.html';
+    }
+}
+
 const html = String.raw;
 const $ = (s) => document.querySelector(s);
 const go = (p) => {
@@ -48,8 +57,11 @@ const nav = (a) =>
                 `<button class="${a === x[0] ? "active" : ""}" onclick="go('${x[0]}')"><span><i class="ph ${x[1]}"></i></span>${x[2]}</button>`,
         )
         .join("")}</nav>`;
-const topbar = (t) =>
-    `<div class="topbar"><div class="brand" style="display:flex; align-items:center; gap:8px;"><img src="assets/Rlogo.png" style="height: 28px;"><span>Hospital<span style="color:#1466d9">Nav</span></span></div><button class="icon-btn" onclick="go('notifications')"><i class="ph ph-bell"></i></button></div>${t ? `<div class="header-row"><div><p class="eyebrow">Hospital companion</p><h1>${t}</h1></div></div>` : ""}`;
+const topbar = (t) => {
+    // Hide bell completely on login and scanning pages for ALL users
+    const hideBell = ['login', 'qrlogin', 'scan'].includes(state.page);
+    return `<div class="topbar"><div class="brand" style="display:flex; align-items:center; gap:8px;"><img src="assets/Rlogo.png" style="height: 28px;"><span>Hospital<span style="color:#1466d9">Nav</span></span></div>${hideBell ? '' : `<button class="icon-btn" onclick="go('notifications')"><i class="ph ph-bell"></i></button>`}</div>${t ? `<div class="header-row"><div><p class="eyebrow">Hospital companion</p><h1>${t}</h1></div></div>` : ""}`;
+};
 function login() {
     let r = state.auth === "register";
     return html`<section class="screen login">
