@@ -153,7 +153,8 @@ function renderQRModal() {
             new QRCode(document.getElementById("qrcode"), {
                 text: PATIENT_URL + "/qr-login.html?token=" + state.showQR.token,
                 width: 200,
-                height: 200
+                height: 200,
+                correctLevel: QRCode.CorrectLevel.L
             });
         }
     }, 50);
