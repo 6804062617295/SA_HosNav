@@ -522,7 +522,7 @@ function profile() {
             <div class="list-item">Language · English</div>
             <div class="list-item">Accessibility settings</div>
         </div>
-        <button class="btn ghost" onclick="localStorage.removeItem('hosnav_user'); localStorage.removeItem('hosnav_token'); go('login');">Log out</button
+        <button class="btn ghost" onclick="localStorage.clear(); go('login');">Log out</button
         >${nav("profile")}
     </section>`;
 }
@@ -672,9 +672,16 @@ async function pollQueue() {
                     alert('It is your turn! Please go to ' + data.data.destination_name);
                 }
             }
+            
+            // Prevent flickering by only re-rendering if queue data actually changed
+            const prevStr = JSON.stringify(state.currentQueue || {});
             state.currentQueue = data.data;
-            const appEl = document.getElementById("app");
-            if (appEl && !["qrlogin", "scan", "map"].includes(state.page)) appEl.innerHTML = pages[state.page](); 
+            const newStr = JSON.stringify(state.currentQueue || {});
+            
+            if (prevStr !== newStr) {
+                const appEl = document.getElementById("app");
+                if (appEl && !["qrlogin", "scan", "map"].includes(state.page)) appEl.innerHTML = pages[state.page](); 
+            }
         }
     } catch(err){}
 }
