@@ -425,15 +425,18 @@ function map() {
     }
 
     if (state.routeData.instructions.length === 0) {
-        return html`<section class="screen center" style="padding-top:150px">
+        return html`<section class="screen">
             ${topbar("", true)}
-            <div class="mark" style="margin:0 auto 24px;background:#24a477">✓</div>
+            <div class="center" style="padding-top:100px;">
+                <div class="mark" style="margin:0 auto 24px;background:#24a477">✓</div>
             <p class="eyebrow">You are already here</p>
             <h1>Arrived</h1>
             <p class="muted">You are already at your destination.</p>
-            <button class="btn primary" style="margin-top:28px" onclick="go('home')">Return to home</button>
-        </section>`;
-    }
+            <button class="btn primary" style="margin-top:28px" onclick="go('home')">Return to home
+            </button>
+        </div>
+    </section>`;
+}
 
     const step = state.routeData.instructions[state.routeStep];
     const isLast = state.routeStep === state.routeData.instructions.length - 1;
@@ -604,9 +607,10 @@ function profile() {
     ${nav("profile")}`;
 }
 function complete() {
-    return html`<section class="screen center" style="padding-top:150px">
-        ${topbar("")}
-        <div class="mark" style="margin:0 auto 24px;background:#24a477">✓</div>
+    return html`<section class="screen">
+        ${topbar("", true)}
+        <div class="center" style="padding-top:100px;">
+            <div class="mark" style="margin:0 auto 24px;background:#24a477">✓</div>
         <p class="eyebrow">Navigation complete</p>
         <h1>You’ve arrived</h1>
         <p class="muted">You have reached your destination.</p>
