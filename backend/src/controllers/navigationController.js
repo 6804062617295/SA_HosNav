@@ -117,7 +117,7 @@ const getRoute = async (req, res) => {
             success: true,
             data: {
                 path: result.path,
-                nodes_info: nodesData.rows.map(r => ({ ...r, name: r.name || r.connected_room_name || (r.type === 'vert' ? 'Elevator/Stairs' : 'Location ' + r.node_id) })),
+                nodes_info: nodesData.rows.map(r => ({ ...r, name: r.name || r.connected_room_name || (r.type === 'elevator' ? 'Elevator Area' : (r.type === 'hallway' || r.type === 'corridor') ? 'Hallway Intersection' : r.type === 'vert' ? 'Elevator/Stairs' : 'Node ' + r.node_id) })),
                 instructions: mergedInst,
                 total_distance: result.totalDistance
             }
@@ -151,7 +151,7 @@ const getCheckpoint = async (req, res) => {
         }
 
         const r = result.rows[0];
-        r.location_name = r.location_name || r.connected_room_name || (r.type === 'vert' ? 'Elevator/Stairs' : 'Location ' + r.node_id);
+        r.location_name = r.location_name || r.connected_room_name || (r.type === 'elevator' ? 'Elevator Area' : (r.type === 'hallway' || r.type === 'corridor') ? 'Hallway Intersection' : r.type === 'vert' ? 'Elevator/Stairs' : 'Point ' + r.node_id);
         res.json({ success: true, data: r });
     } catch (err) {
         console.error(err.message);

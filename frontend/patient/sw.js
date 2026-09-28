@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hosnav-pwa-v41';
+const CACHE_NAME = 'hosnav-pwa-v48';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

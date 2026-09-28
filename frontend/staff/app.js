@@ -57,9 +57,9 @@ async function fetchQueues() {
         });
         const data = await res.json();
         if (data.success) {
+            const prevStr = JSON.stringify(state.patients || []);
             state.patients = data.data;
-            // Do not re-render if QR is showing (prevent flickering)
-            if (!state.showQR) {
+            if (!state.showQR && prevStr !== JSON.stringify(state.patients)) {
                 render();
             }
         }

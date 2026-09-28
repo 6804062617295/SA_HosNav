@@ -1,6 +1,83 @@
 
 const API_URL = 'https://hosnav.onrender.com';
 
+
+
+window.showScanUI = function(text = "Processing...") {
+    if (navigator.vibrate) navigator.vibrate(150);
+    let container = document.getElementById('scan-overlay-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'scan-overlay-container';
+        container.innerHTML = `
+            <div class="scan-bottom-sheet">
+                <div class="scan-icon-wrapper" id="scan-ui-icon">
+                    <div class="scan-spinner"></div>
+                </div>
+                <h3 id="scan-ui-text" style="margin:0; font-size:18px; color:var(--navy);">${text}</h3>
+            </div>
+        `;
+        const appShell = document.querySelector('.app-shell') || document.body;
+        appShell.appendChild(container);
+    } else {
+        document.getElementById('scan-ui-icon').innerHTML = '<div class="scan-spinner"></div>';
+        document.getElementById('scan-ui-text').innerText = text;
+    }
+    void container.offsetWidth;
+    container.classList.add('active');
+};
+
+window.completeScanUI = function(success, text, callback) {
+    let container = document.getElementById('scan-overlay-container');
+    if (!container) {
+        if(callback) callback();
+        return;
+    }
+    const icon = document.getElementById('scan-ui-icon');
+    const textEl = document.getElementById('scan-ui-text');
+    
+    if (success) {
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        icon.innerHTML = '<i class="ph-fill ph-check-circle" style="color:var(--primary); font-size:60px;"></i>';
+        textEl.innerText = text || "Success!";
+    } else {
+        if (navigator.vibrate) navigator.vibrate([50, 100, 50, 100]);
+        icon.innerHTML = '<i class="ph-fill ph-warning-circle" style="color:#ff3b30; font-size:60px;"></i>';
+        textEl.innerText = text || "Invalid QR";
+    }
+    
+    setTimeout(() => {
+        container.classList.remove('active');
+        setTimeout(() => {
+            if (callback) callback();
+        }, 300);
+    }, success ? 800 : 1500); 
+};
+
+window.showToast = function(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = 'custom-toast ' + type;
+    
+    let icon = 'ph-info';
+    if (type === 'error') icon = 'ph-warning-circle';
+    if (type === 'success') icon = 'ph-check-circle';
+    
+    toast.innerHTML = '<i class="ph ' + icon + '" style="font-size:20px;"></i> <span>' + message + '</span>';
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('closing');
+        toast.addEventListener('animationend', () => toast.remove());
+    }, 3000);
+};
+
 const state = {
     page: document.body.dataset.page || "login",
     auth: document.body.dataset.auth || "login",
@@ -57,9 +134,9 @@ const nav = (a) =>
                 `<button class="${a === x[0] ? "active" : ""}" onclick="go('${x[0]}')"><span><i class="ph ${x[1]}"></i></span>${x[2]}</button>`,
         )
         .join("")}</nav>`;
-const topbar = (t) => {
+const topbar = (t, forceHideBell = false) => {
     // Hide bell completely on login and scanning pages for ALL users
-    const hideBell = ['login', 'qrlogin', 'scan'].includes(state.page);
+    const hideBell = forceHideBell || ['login', 'qrlogin', 'scan', 'complete'].includes(state.page);
     return `<div class="topbar"><div class="brand" style="display:flex; align-items:center; gap:8px;"><img src="assets/Rlogo.png" style="height: 28px;"><span>Hospital<span style="color:#1466d9">Nav</span></span></div>${hideBell ? '' : `<button class="icon-btn" onclick="go('notifications')"><i class="ph ph-bell"></i></button>`}</div>${t ? `<div class="header-row"><div><p class="eyebrow">Hospital companion</p><h1>${t}</h1></div></div>` : ""}`;
 };
 function login() {
@@ -114,7 +191,7 @@ function home() {
             </div>
         </div>
         
-        <div class="card appointment">
+        <div class="card appointment ${hasQueue && state.currentQueue.status === 'Called' ? 'pulse-called' : ''}">
             <p class="label">${hasQueue ? "Destination" : "Welcome"}</p>
             <h2>${hasQueue ? state.currentQueue.destination_name : "No Queue"}</h2>
             <p class="muted" style="margin-bottom:15px;">${hasQueue ? "Track your queue or get route." : "Scan QR to get your queue."}</p>
@@ -158,8 +235,8 @@ function home() {
                 <div class="step ${hasQueue && state.currentQueue.status === 'Completed' ? 'done' : ''}">Service done</div>
             </div>
         </div>
-        ${nav("home")}
-    </section>`;
+    </section>
+    ${nav("home")}`;
 }
 function search() {
     const locations = [
@@ -206,8 +283,8 @@ function search() {
                 ${filtered.length === 0 ? '<p class="muted" style="text-align:center; padding:20px;">No matching destinations found</p>' : ''}
             </div>
         </div>
-        ${nav("search")}
-    </section>`;
+    </section>
+    ${nav("search")}`;
 }
 function queue() {
     if(!state.currentQueue) {
@@ -215,8 +292,8 @@ function queue() {
             ${topbar("Your queue")}
             <p class="muted" style="margin-top: 100px;">No active queue found.</p>
             <button class="btn secondary" style="margin-top: 20px" onclick="go('qrlogin')">Scan Queue QR</button>
-            ${nav("queue")}
-        </section>`;
+    </section>
+    ${nav("queue")}`;
     }
     
     let q = state.currentQueue;
@@ -224,7 +301,7 @@ function queue() {
     
     return html`<section class="screen">
         ${topbar("Your queue")}
-        <div class="card center">
+        <div class="card center ${q.status === 'Called' ? 'pulse-called' : ''}">
             <p class="label">Your number</p>
             <div class="queue-number" style="color: ${q.status === 'Called' ? 'var(--blue)' : '#000'}">${q.queue_number}</div>
             <span class="badge" style="background:${badgeColor}; color:white; border:none;">${q.status}</span>
@@ -237,8 +314,8 @@ function queue() {
              q.status === 'Processing' ? '<b style="color:var(--primary); display:block; margin-top:10px">In consultation</b>' :
              '<b style="display:block; margin-top:10px">Queue finished.</b>'}
         </div>
-        ${nav("queue")}
-    </section>`;
+    </section>
+    ${nav("queue")}`;
 }
 
 
@@ -255,10 +332,10 @@ async function loadRouteToLocation(locationId) {
             localStorage.setItem('hosnav_routeStep', '0');
             go('map');
         } else {
-            alert(data.message || 'Could not find a route');
+            showToast(data.message || 'Could not find a route');
         }
     } catch(e) {
-        alert('Connection lost. Please try again.');
+        showToast('Connection lost. Please try again.', 'error');
     }
 }
 
@@ -277,10 +354,10 @@ async function loadRoute() {
             const appEl = document.getElementById("app");
             if (appEl && !["qrlogin", "scan", "map"].includes(state.page)) appEl.innerHTML = pages[state.page]();
         } else {
-            alert(data.message || 'Could not find a route');
+            showToast(data.message || 'Could not find a route');
         }
     } catch(e) {
-        alert('Connection lost. Please try again.');
+        showToast('Connection lost. Please try again.', 'error');
     }
 }
 
@@ -303,7 +380,7 @@ function route() {
             <b>${(state.routeData.nodes_info.find(n => n.node_id === state.routeData.path[0]) || {}).name || localStorage.getItem('hosnav_currentLocationName') || 'Current Location'}</b>
             <p class="muted" style="margin:12px 0">↓</p>
             <p class="label">To</p>
-            <b>${destNode ? destNode.name : state.currentQueue.destination_name}</b>
+            <b>${(state.currentQueue && state.currentQueue.destination_name) || (destNode ? destNode.name : "Destination")}</b>
         </div>
         <div class="stats">
             <div class="card stat">
@@ -331,7 +408,7 @@ function nextStep() {
         if (state.routeData && state.routeData.instructions.length > 0) {
             const lastInst = state.routeData.instructions[state.routeData.instructions.length - 1];
             state.currentNode = lastInst.to;
-            localStorage.setItem('hosnav_currentNode', state.currentNode.toString()); const dNode = state.routeData.nodes_info.find(n => n.node_id === lastInst.to); if(dNode) localStorage.setItem('hosnav_currentLocationName', (dNode.name || 'Door ' + dNode.node_id) + ' (Floor ' + dNode.node_floor + ')');
+            localStorage.setItem('hosnav_currentNode', state.currentNode.toString()); const dNode = state.routeData.nodes_info.find(n => n.node_id === lastInst.to); if(dNode) localStorage.setItem('hosnav_currentLocationName', (dNode.name || 'Node ' + dNode.node_id) + ' (Floor ' + dNode.node_floor + ')');
         }
         localStorage.removeItem('hosnav_routeData');
         localStorage.removeItem('hosnav_routeStep');
@@ -349,7 +426,7 @@ function map() {
 
     if (state.routeData.instructions.length === 0) {
         return html`<section class="screen center" style="padding-top:150px">
-            ${topbar("")}
+            ${topbar("", true)}
             <div class="mark" style="margin:0 auto 24px;background:#24a477">✓</div>
             <p class="eyebrow">You are already here</p>
             <h1>Arrived</h1>
@@ -484,8 +561,8 @@ function notifications() {
                 <i class="ph ph-bell-slash" style="font-size: 48px;"></i>
                 <p>No new notifications</p>
             </div>
-            ${nav("")}
-        </section>`;
+    </section>
+    ${nav("")}`;
     }
 
     return html`<section class="screen">
@@ -500,8 +577,8 @@ function notifications() {
             <small style="color:#aaa; font-size:10px;">${new Date(n.time).toLocaleTimeString()}</small>
         </div>
         `).join('')}
-        ${nav("")}
-    </section>`;
+    </section>
+    ${nav("")}`;
 }
 function profile() {
     let userStr = localStorage.getItem('hosnav_user');
@@ -522,9 +599,9 @@ function profile() {
             <div class="list-item">Language · English</div>
             <div class="list-item">Accessibility settings</div>
         </div>
-        <button class="btn ghost" onclick="localStorage.clear(); go('login');">Log out</button
-        >${nav("profile")}
-    </section>`;
+        <button class="btn ghost" onclick="localStorage.clear(); go('login');">Log out</button>
+    </section>
+    ${nav("profile")}`;
 }
 function complete() {
     return html`<section class="screen center" style="padding-top:150px">
@@ -532,7 +609,7 @@ function complete() {
         <div class="mark" style="margin:0 auto 24px;background:#24a477">✓</div>
         <p class="eyebrow">Navigation complete</p>
         <h1>You’ve arrived</h1>
-        <p class="muted">Cardiology Clinic has been reached successfully.</p>
+        <p class="muted">You have reached your destination.</p>
         <button
             class="btn primary"
             style="margin-top:28px"
@@ -575,19 +652,20 @@ function startRobustCamera(onSuccess) {
                     // Fallback to environment facingMode if ID fails
                     window._activeQr.start({ facingMode: "environment" }, { fps: 2, qrbox: {width: 250, height: 250} }, (text) => {
                         window._activeQr.stop().then(() => onSuccess(text)).catch(() => onSuccess(text));
-                    }, undefined).catch(err2 => alert("Camera start failed: " + err2));
+                    }, undefined).catch(err2 => showToast("Camera start failed: " + err2));
                 });
             } else {
-                alert("No cameras found on your device.");
+                showToast("No cameras found on your device.", 'error');
             }
         }).catch(err => {
-            alert("Camera permission error: " + err);
+            showToast("Camera permission error: " + err);
         });
     }, 300);
 }
 
 if (state.page === 'qrlogin') {
     startRobustCamera((decodedText) => {
+        window.showScanUI('Linking Queue...');
         let token = decodedText;
         if(token.includes('token=')) {
             token = token.split('token=')[1].split('&')[0];
@@ -600,6 +678,7 @@ if (state.page === 'qrlogin') {
 
 if (state.page === 'scan') {
     startRobustCamera((decodedText) => {
+        window.showScanUI('Finding location...');
         handleCheckpointScan(decodedText);
     });
 }
@@ -613,8 +692,6 @@ async function handleCheckpointScan(code) {
             localStorage.setItem('hosnav_currentNode', state.currentNode.toString());
             localStorage.setItem('hosnav_currentLocationName', `${data.data.location_name} (Floor ${data.data.floor})`);
             
-            alert(`Location updated: ${data.data.location_name}`);
-            
             if (state.routeData && state.routeData.path && state.routeData.path.length > 0) {
                 const destId = state.routeData.path[state.routeData.path.length - 1];
                 const rRes = await fetch(`${API_URL}/api/navigation/route?from_node=${state.currentNode}&to_node=${destId}`);
@@ -624,18 +701,16 @@ async function handleCheckpointScan(code) {
                     state.routeStep = 0;
                     localStorage.setItem('hosnav_routeData', JSON.stringify(rData.data));
                     localStorage.setItem('hosnav_routeStep', '0');
-                    go('map');
+                    window.completeScanUI(true, `Location updated:${data.data.location_name}`, () => go('map'));
                     return;
                 }
             }
-            go('home');
+            window.completeScanUI(true, `Location updated:${data.data.location_name}`, () => go('home'));
         } else {
-            alert('Invalid Checkpoint QR');
-            go('home');
+            window.completeScanUI(false, 'Invalid Checkpoint QR', () => go('home'));
         }
     } catch (e) {
-        alert('Connection error');
-        go('home');
+        window.completeScanUI(false, 'Connection error', () => go('home'));
     }
 }
 
@@ -648,7 +723,7 @@ async function pollQueue() {
         const data = await res.json();
         if(data.success) {
             if (data.data.status === 'Completed' || data.data.status === 'Skipped') {
-                alert('Your queue has been ' + data.data.status.toLowerCase() + '. Thank you!');
+                showToast('Your queue has been ' + data.data.status.toLowerCase() + '. Thank you!');
                 localStorage.removeItem('queueToken');
                 localStorage.removeItem('hosnav_currentNode');
                 localStorage.removeItem('hosnav_currentLocationName');
@@ -669,7 +744,7 @@ async function pollQueue() {
                 localStorage.setItem('hosnav_notis', JSON.stringify(notis));
 
                 if(data.data.status === 'Called') {
-                    alert('It is your turn! Please go to ' + data.data.destination_name);
+                    showToast('It is your turn! Please go to ' + data.data.destination_name);
                 }
             }
             
@@ -700,7 +775,17 @@ async function handleQRScan(token, silent = false) {
         
         if(data.success) {
             if (data.data.status === 'Completed' || data.data.status === 'Skipped') {
-                if (!silent) alert('This queue has already ended.');
+                if (!silent) {
+                    window.completeScanUI(false, 'This queue has already ended.', () => {
+                        localStorage.removeItem('queueToken');
+                        localStorage.removeItem('hosnav_currentNode');
+                        localStorage.removeItem('hosnav_currentLocationName');
+                        state.queueToken = null;
+                        state.currentQueue = null;
+                        go('home'); // Ensure we return home
+                    });
+                    return;
+                }
                 localStorage.removeItem('queueToken');
                 localStorage.removeItem('hosnav_currentNode');
                 localStorage.removeItem('hosnav_currentLocationName');
@@ -710,12 +795,10 @@ async function handleQRScan(token, silent = false) {
             }
             
             const oldToken = localStorage.getItem('queueToken');
-            
             localStorage.setItem('queueToken', token);
             state.queueToken = token;
             state.currentQueue = data.data;
             
-            // Force location reset ONLY if joining a completely NEW queue
             if (oldToken !== token || !localStorage.getItem('hosnav_currentNode')) {
                 localStorage.setItem('hosnav_currentNode', '76');
                 localStorage.setItem('hosnav_currentLocationName', 'General Waiting Room (Floor 1)');
@@ -723,20 +806,35 @@ async function handleQRScan(token, silent = false) {
             }
             
             if(!silent && state.page !== 'queue') {
-                go('queue');
+                window.completeScanUI(true, 'Linked to Queue!', () => go('queue'));
             } else {
-                const appEl = document.getElementById("app");
-                if (appEl && !["qrlogin", "scan", "map"].includes(state.page)) appEl.innerHTML = pages[state.page]();
+                if(!silent && document.getElementById('scan-overlay-container')) {
+                    window.completeScanUI(true, 'Linked to Queue!', () => {
+                        const appEl = document.getElementById("app");
+                        if (appEl && !["qrlogin", "scan", "map"].includes(state.page)) appEl.innerHTML = pages[state.page]();
+                    });
+                } else {
+                    const appEl = document.getElementById("app");
+                    if (appEl && !["qrlogin", "scan", "map"].includes(state.page)) appEl.innerHTML = pages[state.page]();
+                }
             }
         } else {
-            if(!silent) alert('QR code is incorrect or expired');
-            localStorage.removeItem('queueToken');
+            if(!silent) {
+                window.completeScanUI(false, 'QR code is incorrect or expired', () => {
+                    localStorage.removeItem('queueToken');
+                    localStorage.removeItem('hosnav_currentNode');
+                    localStorage.removeItem('hosnav_currentLocationName');
+                    state.queueToken = null;
+                });
+            } else {
+                localStorage.removeItem('queueToken');
                 localStorage.removeItem('hosnav_currentNode');
                 localStorage.removeItem('hosnav_currentLocationName');
                 state.queueToken = null;
+            }
         }
     } catch(err) {
-        if(!silent) alert('Connection lost');
+        if(!silent) window.completeScanUI(false, 'Connection lost', () => go('home'));
     }
 }
 
@@ -788,12 +886,12 @@ async function handleAuth(isRegister) {
         
         if (result.success) {
             if (isRegister) {
-                alert('Account created successfully!');
+                showToast('Account created successfully!', 'success');
                 go('login');
             } else {
                 localStorage.setItem('hosnav_token', result.token);
                 localStorage.setItem('hosnav_user', JSON.stringify(result.user));
-                alert('Welcome, ' + result.user.name);
+                showToast('Welcome, ' + result.user.name, 'success');
                 go('home');
             }
         } else {
