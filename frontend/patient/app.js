@@ -1,6 +1,36 @@
 
 const API_URL = 'https://hosnav.onrender.com';
 
+// --- Render Free Tier Cold Start Handler ---
+(function() {
+    fetch(API_URL + '/api/health').catch(()=>{}); // Eager wake up
+    let isWakingToastShown = false;
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+        const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url ? args[0].url : '');
+        let timeoutId;
+        if (url && url.includes(API_URL) && !url.includes('/api/health')) {
+            timeoutId = setTimeout(() => {
+                if (!isWakingToastShown) {
+                    isWakingToastShown = true;
+                    const msg = 'Server is waking up from sleep. This may take ~50s...';
+                    if (typeof window.showToast === 'function') window.showToast(msg, 'info');
+                    else if (typeof notify === 'function') notify(msg);
+                    else alert(msg);
+                }
+            }, 4000);
+        }
+        try { 
+            const res = await originalFetch.apply(this, args); 
+            isWakingToastShown = false;
+            return res;
+        } finally { 
+            if (timeoutId) clearTimeout(timeoutId); 
+        }
+    };
+})();
+// -------------------------------------------
+
 
 
 window.showScanUI = function(text = "Processing...") {
