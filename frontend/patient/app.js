@@ -188,6 +188,11 @@ function login() {
             ${r ? '<label class="field">Full name</label><input id="auth-name" class="input" placeholder="Your full name">' : ""}
             <label class="field">Email address</label>
             <input id="auth-email" class="input" type="email" placeholder="you@email.com"/>
+            ${r ? `<label class="field">Verification code</label>
+            <div style="display:flex;gap:8px">
+                <input id="auth-otp" class="input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code"/>
+                <button id="otp-btn" class="btn secondary" style="width:auto;white-space:nowrap" onclick="sendOtp()">Send code</button>
+            </div>` : ""}
             <label class="field">Password</label>
             <input id="auth-password" class="input" type="password" placeholder="••••••••"/>
             <button class="btn primary" style="margin-top:18px" onclick="handleAuth(${r})">
@@ -890,13 +895,51 @@ async function syncActiveQueue() {
 }
 syncActiveQueue();
 
+async function sendOtp() {
+    const email = document.getElementById('auth-email').value;
+    const errorEl = document.getElementById('auth-error');
+    const btn = document.getElementById('otp-btn');
+    errorEl.style.display = 'none';
+
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+        errorEl.textContent = 'Please enter a valid email address';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    try {
+        const response = await fetch(API_URL + '/api/auth/register/otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message);
+        showToast(result.message, 'success');
+        let s = 60;
+        btn.textContent = `Resend (${s})`;
+        const t = setInterval(() => {
+            if (--s > 0) return (btn.textContent = `Resend (${s})`);
+            clearInterval(t);
+            btn.textContent = 'Resend code';
+            btn.disabled = false;
+        }, 1000);
+    } catch (err) {
+        btn.disabled = false;
+        errorEl.textContent = err.message || 'Connection lost. Please try again.';
+        errorEl.style.display = 'block';
+    }
+}
+
 async function handleAuth(isRegister) {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
     const name = isRegister ? document.getElementById('auth-name').value : undefined;
+    const otp = isRegister ? document.getElementById('auth-otp').value.trim() : undefined;
     const errorEl = document.getElementById('auth-error');
-    
-    if (!email || !password || (isRegister && !name)) {
+
+    if (!email || !password || (isRegister && (!name || !otp))) {
         errorEl.textContent = 'Please fill in all fields';
         errorEl.style.display = 'block';
         return;
@@ -913,7 +956,7 @@ async function handleAuth(isRegister) {
         const response = await fetch(API_URL + endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(isRegister ? { email, password, name } : { email, password })
+            body: JSON.stringify(isRegister ? { email, password, name, otp } : { email, password })
         });
         
         const result = await response.json();
