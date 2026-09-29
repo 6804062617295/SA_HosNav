@@ -44,6 +44,7 @@ const state = {
 };
 
 const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 function notify(t) {
     state.toast = t;
@@ -275,7 +276,7 @@ function dashboard() {
             (p) => `
         <tr>
             <td><b>${p.queue_number}</b></td>
-            <td>${p.patient_name || 'Guest'}</td>
+            <td>${esc(p.patient_name || 'Guest')}</td>
             <td><span class="status ${p.status.toLowerCase()}">${p.status}</span></td>
             <td>
                 <select onchange="updateStatus(${p.queue_id}, this.value); this.value=''">
