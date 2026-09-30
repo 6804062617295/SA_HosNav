@@ -1,6 +1,40 @@
 
 const API_URL = 'https://hosnav.onrender.com';
 
+
+window.stopScannerAndGoBack = () => {
+    const hasAccess = !!(localStorage.getItem('queueToken') || localStorage.getItem('hosnav_token'));
+    let dest = 'home';
+    if (state.page === 'qrlogin' && !hasAccess) {
+        dest = 'login';
+    }
+    if (window._activeQr) {
+        window._activeQr.stop().catch(()=>{}).finally(() => go(dest));
+    } else {
+        go(dest);
+    }
+};
+
+window.renderSearchResults = () => {
+    const query = (state.searchQuery || '').toLowerCase();
+    const filtered = window.HOSPITAL_LOCATIONS.filter(l => !query || l.name.toLowerCase().includes(query) || l.tag.toLowerCase().includes(query));
+    const listEl = document.getElementById('search-results-list');
+    if (listEl) {
+        listEl.innerHTML = filtered.map(l => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+                <div>
+                    <b style="font-size:14px; color:#1e293b; display:block;">${l.name}</b>
+                    <small class="muted">Floor ${l.floor} &middot; ${l.tag}</small>
+                </div>
+                <button class="btn secondary" style="padding:6px 12px; font-size:12px;" onclick="loadRouteToLocation(${l.id})">
+                    Navigate
+                </button>
+            </div>
+        `).join('') + (filtered.length === 0 ? '<p class="muted" style="text-align:center; padding:20px;">No matching destinations found</p>' : '');
+    }
+};
+
+
 // --- Render Free Tier Cold Start Handler ---
 (function() {
     fetch(API_URL + '/api/health').catch(()=>{}); // Eager wake up
@@ -108,6 +142,27 @@ window.showToast = function(message, type = 'info') {
     }, 3000);
 };
 
+window.HOSPITAL_LOCATIONS = [
+
+        { id: 14, name: 'Food Court', floor: 1, tag: 'Facility' },
+        { id: 12, name: 'Pharmacy', floor: 1, tag: 'Service' },
+        { id: 13, name: 'Payment', floor: 1, tag: 'Cashier' },
+        { id: 7,  name: 'Treatment Room', floor: 1, tag: 'Treatment' },
+        { id: 8,  name: 'Examination Room 1', floor: 1, tag: 'Clinic' },
+        { id: 9,  name: 'Examination Room 2', floor: 1, tag: 'Clinic' },
+        { id: 10, name: 'Examination Room 3', floor: 1, tag: 'Clinic' },
+        { id: 11, name: 'Examination Room 4', floor: 1, tag: 'Clinic' },
+        { id: 16, name: 'Blood Draw', floor: 2, tag: 'Lab' },
+        { id: 17, name: 'X-ray', floor: 2, tag: 'Imaging' },
+        { id: 15, name: 'Vaccine Clinic', floor: 2, tag: 'Clinic' },
+        { id: 18, name: 'Specialized Waiting Room', floor: 2, tag: 'Waiting' },
+        { id: 19, name: 'ENT', floor: 2, tag: 'Clinic' },
+        { id: 20, name: 'Eye Clinic', floor: 2, tag: 'Clinic' },
+        { id: 21, name: 'Skin Clinic', floor: 2, tag: 'Clinic' },
+        { id: 22, name: 'Dental Clinic', floor: 2, tag: 'Clinic' }
+    
+];
+
 const state = {
     page: document.body.dataset.page || "login",
     auth: document.body.dataset.auth || "login",
@@ -165,9 +220,17 @@ const nav = (a) =>
         )
         .join("")}</nav>`;
 const topbar = (t, forceHideBell = false) => {
-    // Hide bell completely on login and scanning pages for ALL users
-    const hideBell = forceHideBell || ['login', 'qrlogin', 'scan', 'complete'].includes(state.page);
-    return `<div class="topbar"><div class="brand" style="display:flex; align-items:center; gap:8px;"><img src="assets/Rlogo.png" style="height: 28px;"><span>Hospital<span style="color:#1466d9">Nav</span></span></div>${hideBell ? '' : `<button class="icon-btn" onclick="go('notifications')"><i class="ph ph-bell"></i></button>`}</div>${t ? `<div class="header-row"><div><p class="eyebrow">Hospital companion</p><h1>${t}</h1></div></div>` : ""}`;
+    const isScanPage = ['qrlogin', 'scan'].includes(state.page);
+    const hideBell = forceHideBell || isScanPage || ['login', 'complete'].includes(state.page);
+    
+    let rightAction = '';
+    if (isScanPage) {
+        rightAction = `<button class="icon-btn" style="background:#f1f5f9; width:36px; height:36px; display:flex; align-items:center; justify-content:center; padding:0; border:none;" onclick="stopScannerAndGoBack()"><i class="ph ph-x" style="font-size:20px;"></i></button>`;
+    } else if (!hideBell) {
+        rightAction = `<button class="icon-btn" onclick="go('notifications')"><i class="ph ph-bell"></i></button>`;
+    }
+
+    return `<div class="topbar"><div class="brand" style="display:flex; align-items:center; gap:8px;"><img src="assets/Rlogo.png" style="height: 28px;"><span>Hospital<span style="color:#1466d9">Nav</span></span></div>${rightAction}</div>${t ? `<div class="header-row"><div><p class="eyebrow">Hospital companion</p><h1>${t}</h1></div></div>` : ""}`;
 };
 function login() {
     let r = state.auth === "register";
@@ -274,48 +337,15 @@ function home() {
     ${nav("home")}`;
 }
 function search() {
-    const locations = [
-        { id: 14, name: 'Food Court', floor: 1, tag: 'Facility' },
-        { id: 12, name: 'Pharmacy', floor: 1, tag: 'Service' },
-        { id: 13, name: 'Payment', floor: 1, tag: 'Cashier' },
-        { id: 7,  name: 'Treatment Room', floor: 1, tag: 'Treatment' },
-        { id: 8,  name: 'Examination Room 1', floor: 1, tag: 'Clinic' },
-        { id: 9,  name: 'Examination Room 2', floor: 1, tag: 'Clinic' },
-        { id: 10, name: 'Examination Room 3', floor: 1, tag: 'Clinic' },
-        { id: 11, name: 'Examination Room 4', floor: 1, tag: 'Clinic' },
-        { id: 16, name: 'Blood Draw', floor: 2, tag: 'Lab' },
-        { id: 17, name: 'X-ray', floor: 2, tag: 'Imaging' },
-        { id: 15, name: 'Vaccine Clinic', floor: 2, tag: 'Clinic' },
-        { id: 18, name: 'Specialized Waiting Room', floor: 2, tag: 'Waiting' },
-        { id: 19, name: 'ENT', floor: 2, tag: 'Clinic' },
-        { id: 20, name: 'Eye Clinic', floor: 2, tag: 'Clinic' },
-        { id: 21, name: 'Skin Clinic', floor: 2, tag: 'Clinic' },
-        { id: 22, name: 'Dental Clinic', floor: 2, tag: 'Clinic' }
-    ];
-
-    const query = (state.searchQuery || '').toLowerCase();
-    const filtered = locations.filter(l => !query || l.name.toLowerCase().includes(query) || l.tag.toLowerCase().includes(query));
-
+    setTimeout(window.renderSearchResults, 0); // Render list after DOM loads
     return html`<section class="screen">
         ${topbar("Find a destination")}
         <div class="search" style="margin-bottom: 12px;">
-            <input class="input" placeholder="Search room, clinic, service..." value="${state.searchQuery || ''}" oninput="state.searchQuery = this.value; render();" />
+            <input class="input" placeholder="Search room, clinic, service..." value="${state.searchQuery || ''}" oninput="state.searchQuery = this.value; window.renderSearchResults();" autofocus />
         </div>
         <div class="card" style="padding: 12px;">
             <p class="label" style="margin-bottom: 10px;">Available Destinations</p>
-            <div style="display:flex; flex-direction:column; gap:8px; max-height: 380px; overflow-y: auto;">
-                ${filtered.map(l => html`
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
-                        <div>
-                            <b style="font-size:14px; color:#1e293b; display:block;">${l.name}</b>
-                            <small class="muted">Floor ${l.floor} · ${l.tag}</small>
-                        </div>
-                        <button class="btn secondary" style="padding:6px 12px; font-size:12px;" onclick="loadRouteToLocation(${l.id})">
-                            Navigate
-                        </button>
-                    </div>
-                `).join('')}
-                ${filtered.length === 0 ? '<p class="muted" style="text-align:center; padding:20px;">No matching destinations found</p>' : ''}
+            <div id="search-results-list" style="display:flex; flex-direction:column; gap:8px; max-height: 380px; overflow-y: auto;">
             </div>
         </div>
     </section>
