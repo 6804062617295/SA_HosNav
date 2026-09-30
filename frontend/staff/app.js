@@ -22,6 +22,16 @@ const API_URL = 'https://hosnav.onrender.com';
         try { 
             const res = await originalFetch.apply(this, args); 
             isWakingToastShown = false;
+            
+            // Auto Logout on Expiry
+            if ((res.status === 401 || res.status === 403) && url && !url.includes('/login')) {
+                if (typeof handleLogout === 'function' && typeof state !== 'undefined' && state.logged) {
+                    handleLogout();
+                    setTimeout(() => {
+                        if (typeof notify === 'function') notify('Session expired. Please log in again.');
+                    }, 100);
+                }
+            }
             return res;
         } finally { 
             if (timeoutId) clearTimeout(timeoutId); 
@@ -221,6 +231,7 @@ function login() {
                 <p class="muted" style="text-align:center;font-size:12px;margin-top:18px">Authorized hospital personnel only</p>
             </div>
         </section>
+        ${state.toast ? `<div class="toast"><i class="ph ph-info"></i> ${state.toast}</div>` : ""}
     `;
 }
 
