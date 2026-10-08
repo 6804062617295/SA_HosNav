@@ -143,13 +143,13 @@ HIS, Kiosks, and actual hardware are not directly connected to the system. Mock 
 - Queue Tracking uses polling to periodically update data.
 
 ### 3.4 Database Requirements
-- **User**: `user_id`, `email`, `password_hash`, `name`, `role`
-- **Queue**: `queue_id`, `patient_id`, `destination_id`, `status`, `created_at`
+- **User**: `user_id`, `email`, `password_hash`, `name`, `role`, `created_at`
+- **Queue**: `queue_id`, `queue_number`, `token`, `patient_id`, `destination_id`, `status`, `created_at`
 - **QueueHistory**: `history_id`, `queue_id`, `status`, `updated_at`, `staff_id`
 - **Location**: `location_id`, `name`, `building`, `floor`
-- **NavigationNode**: `node_id`, `location_id`, `type`
-- **NavigationEdge**: `edge_id`, `from_node`, `to_node`, `instruction`
-- **QRCheckpoint**: `qr_id`, `node_id`
+- **NavigationNode**: `node_id`, `location_id`, `type`, `pos_x`, `pos_y`, `floor`
+- **NavigationEdge**: `edge_id`, `from_node`, `to_node`, `instruction`, `distance_meters`
+- **QRCheckpoint**: `qr_id`, `node_id`, `code_hash`
 
 ### 3.5 Security Requirements
 - **Authentication**: Passwords are hashed, with expiring Session/Token.

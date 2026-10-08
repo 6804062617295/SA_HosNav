@@ -6,11 +6,11 @@
         <mxCell id="1" parent="0" />
         
         <!-- Classes -->
-        <mxCell id="class_user" value="&lt;b&gt;User&lt;/b&gt;&lt;hr&gt;-user_id:int&lt;br&gt;-email:string&lt;br&gt;-password_hash:string&lt;br&gt;-name:string&lt;br&gt;-role:string&lt;hr&gt;+login(email,password):boolean&lt;br&gt;+register(data):boolean" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+        <mxCell id="class_user" value="&lt;b&gt;User&lt;/b&gt;&lt;hr&gt;-user_id:int&lt;br&gt;-email:string&lt;br&gt;-password_hash:string&lt;br&gt;-name:string&lt;br&gt;-role:string&lt;br&gt;-created_at:timestamp&lt;hr&gt;+login(email,password):boolean&lt;br&gt;+register(data):boolean" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
           <mxGeometry x="100" y="100" width="220" height="150" as="geometry" />
         </mxCell>
         
-        <mxCell id="class_queue" value="&lt;b&gt;Queue&lt;/b&gt;&lt;hr&gt;-queue_id:int&lt;br&gt;-patient_id:int&lt;br&gt;-destination_id:int&lt;br&gt;-status:string&lt;br&gt;-created_at:timestamp&lt;hr&gt;+updateStatus(status):void&lt;br&gt;+forwardTo(destination_id):void" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+        <mxCell id="class_queue" value="&lt;b&gt;Queue&lt;/b&gt;&lt;hr&gt;-queue_id:int&lt;br&gt;-queue_number:string&lt;br&gt;-token:string&lt;br&gt;-patient_id:int&lt;br&gt;-destination_id:int&lt;br&gt;-status:string&lt;br&gt;-created_at:timestamp&lt;hr&gt;+updateStatus(status):void&lt;br&gt;+forwardTo(destination_id):void" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
           <mxGeometry x="480" y="100" width="220" height="150" as="geometry" />
         </mxCell>
         
@@ -22,15 +22,15 @@
           <mxGeometry x="480" y="380" width="220" height="150" as="geometry" />
         </mxCell>
         
-        <mxCell id="class_navigation_node" value="&lt;b&gt;NavigationNode&lt;/b&gt;&lt;hr&gt;-node_id:int&lt;br&gt;-location_id:int&lt;br&gt;-type:string&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+        <mxCell id="class_navigation_node" value="&lt;b&gt;NavigationNode&lt;/b&gt;&lt;hr&gt;-node_id:int&lt;br&gt;-location_id:int&lt;br&gt;-type:string&lt;br&gt;-pos_x:int&lt;br&gt;-pos_y:int&lt;br&gt;-floor:int&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
           <mxGeometry x="480" y="650" width="220" height="150" as="geometry" />
         </mxCell>
         
-        <mxCell id="class_navigation_edge" value="&lt;b&gt;NavigationEdge&lt;/b&gt;&lt;hr&gt;-edge_id:int&lt;br&gt;-from_node:int&lt;br&gt;-to_node:int&lt;br&gt;-instruction:string&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+        <mxCell id="class_navigation_edge" value="&lt;b&gt;NavigationEdge&lt;/b&gt;&lt;hr&gt;-edge_id:int&lt;br&gt;-from_node:int&lt;br&gt;-to_node:int&lt;br&gt;-instruction:string&lt;br&gt;-distance_meters:decimal&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
           <mxGeometry x="100" y="650" width="220" height="150" as="geometry" />
         </mxCell>
         
-        <mxCell id="class_qr_checkpoint" value="&lt;b&gt;QRCheckpoint&lt;/b&gt;&lt;hr&gt;-qr_id:int&lt;br&gt;-node_id:int&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
+        <mxCell id="class_qr_checkpoint" value="&lt;b&gt;QRCheckpoint&lt;/b&gt;&lt;hr&gt;-qr_id:int&lt;br&gt;-node_id:int&lt;br&gt;-code_hash:string&lt;hr&gt;" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;" vertex="1" parent="1">
           <mxGeometry x="850" y="650" width="220" height="150" as="geometry" />
         </mxCell>
         
